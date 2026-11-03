@@ -19,7 +19,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/`
   - Files: `pack/pack.toml`, `pack/index.toml`, `pack/mods/cobblemon.pw.toml`, `pack/mods/fabric-api.pw.toml`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`
 
-- [ ] Task 4: Full 1.0.0 mod list with explicit sides
+- [x] Task 4: Full 1.0.0 mod list with explicit sides
   - Acceptance: 14 mods present with sides per the plan's side table; inspect asserts every env marker; refresh is a no-op
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/`
   - Files: `pack/mods/*.pw.toml`, `pack/index.toml`, `scripts/pack-inspect.sh`

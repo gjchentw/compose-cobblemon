@@ -16,9 +16,26 @@ import zipfile
 MINECRAFT = "1.21.1"
 
 # name -> (filename token matched case-insensitively, (client env, server env))
+BOTH = ("required", "required")
+CLIENT = ("required", "unsupported")
 EXPECTED = {
-    "cobblemon": ("cobblemon-fabric-", ("required", "required")),
-    "fabric-api": ("fabric-api-", ("required", "required")),
+    # required
+    "cobblemon": ("cobblemon-fabric-", BOTH),
+    "fabric-api": ("fabric-api-", BOTH),
+    # performance
+    "sodium": ("sodium-fabric-", CLIENT),
+    "lithium": ("lithium-fabric-", BOTH),
+    "ferrite-core": ("ferritecore-", BOTH),
+    "immediatelyfast": ("immediatelyfast-fabric-", CLIENT),
+    "entityculling": ("entityculling-fabric-", CLIENT),
+    # quality of life
+    "modmenu": ("modmenu-", CLIENT),
+    "placeholder-api": ("placeholder-api-", CLIENT),  # required by Mod Menu
+    "emi": ("emi-", CLIENT),
+    "xaeros-minimap": ("xaerominimap-", CLIENT),
+    "xaeros-world-map": ("xaeroworldmap-", CLIENT),
+    "appleskin": ("appleskin-fabric-", BOTH),
+    "mouse-tweaks": ("mousetweaks-fabric-", CLIENT),
 }
 
 

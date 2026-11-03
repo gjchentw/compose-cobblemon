@@ -37,7 +37,7 @@ Decisions already made in `SPEC.md` are not repeated. These are the implementati
    | cobblemon, fabric-api | both | yes |
    | lithium, ferrite-core | both | yes (server performance) |
    | appleskin | both | yes (accurate hunger values) |
-   | sodium, immediatelyfast, entityculling, modmenu, mouse-tweaks | client | no |
+   | sodium, immediatelyfast, entityculling, modmenu, placeholder-api (Mod Menu dependency), mouse-tweaks | client | no |
    | emi, xaeros-minimap, xaeros-world-map | client | no |
 
 4. **Image pins use the multi-arch index digest**, not a per-platform digest. The amd64 digest quoted in `SPEC.md` would fail to pull on the arm64 dev machine. Task 6 records the index digest and verifies both platforms with `docker buildx imagetools inspect`. `SPEC.md` is corrected in the same commit.
