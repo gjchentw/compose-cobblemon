@@ -33,19 +33,25 @@ env_value() {
 # wait_healthy SERVICE TIMEOUT_SECONDS
 # Polls the compose service's container health. Prints the elapsed time on
 # success; on unhealthy or timeout prints the last log lines and returns 1.
+# Docker keeps the previous "healthy" status across a stop/start until the
+# next probe runs, so a probe newer than the ones seen on entry is required.
 wait_healthy() {
-  local service="$1" timeout="$2" cid health elapsed=0
+  local service="$1" timeout="$2" cid health elapsed=0 probes0 probes
   cid="$(docker compose ps -q "$service")"
   if [ -z "$cid" ]; then
     echo "no container for service $service" >&2
     return 1
   fi
+  probes0="$(docker inspect -f '{{range .State.Health.Log}}{{.Start}};{{end}}' "$cid")"
   while :; do
     health="$(docker inspect -f '{{.State.Health.Status}}' "$cid")"
+    probes="$(docker inspect -f '{{range .State.Health.Log}}{{.Start}};{{end}}' "$cid")"
     case "$health" in
       healthy)
-        echo "healthy after ~${elapsed}s" >&2
-        return 0
+        if [ "$probes" != "$probes0" ]; then
+          echo "healthy after ~${elapsed}s" >&2
+          return 0
+        fi
         ;;
       unhealthy)
         docker compose logs --no-color --tail 40 "$service" >&2
