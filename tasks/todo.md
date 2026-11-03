@@ -4,7 +4,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
 
 ## Phase 1: Foundation and pack
 
-- [ ] Task 1: Lint harness and repo hygiene
+- [x] Task 1: Lint harness and repo hygiene
   - Acceptance: `scripts/lint.sh` passes on the repo and fails on a known-bad scratch file; `.gitignore` covers all runtime paths
   - Verify: `scripts/lint.sh`; `git status --ignored`
   - Files: `.gitignore`, `scripts/lint.sh`, `.yamllint.yaml`, `.hadolint.yaml`

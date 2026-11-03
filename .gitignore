@@ -1,0 +1,17 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Runtime data: world saves, backups, staging copies. Never committed.
+data/
+backups/
+staging/
+
+# Build outputs: exported packs and the export build directory
+dist/
+.build/
+
+# Logs and OS noise
+*.log
+.DS_Store

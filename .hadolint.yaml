@@ -1,0 +1,3 @@
+# hadolint configuration. See https://github.com/hadolint/hadolint#configure
+# Any finding at info level or above fails the lint (the repo pins everything).
+failure-threshold: info

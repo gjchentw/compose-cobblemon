@@ -1,0 +1,13 @@
+# yamllint configuration. See https://yamllint.readthedocs.io/en/stable/rules.html
+# scripts/lint.sh runs yamllint in strict mode, so warnings fail too.
+extends: default
+rules:
+  line-length:
+    max: 160
+    allow-non-breakable-inline-mappings: true
+  document-start: disable
+  truthy:
+    allowed-values: ["true", "false"]
+    check-keys: false
+  comments:
+    min-spaces-from-content: 1
