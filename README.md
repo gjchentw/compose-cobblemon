@@ -5,7 +5,7 @@ one versioned release. Admins run everything with `docker compose`; players inst
 `.mrpack` and press Play.
 
 - Players: read [docs/player-guide.md](docs/player-guide.md)
-  (繁體中文: [docs/player-guide.zh-TW.md](docs/player-guide.zh-TW.md)).
+  (Traditional Chinese: [docs/player-guide.zh-TW.md](docs/player-guide.zh-TW.md)).
 - Admins: read [docs/admin-guide.md](docs/admin-guide.md), then
   [docs/upgrade.md](docs/upgrade.md) and [docs/rollback.md](docs/rollback.md).
 
@@ -27,7 +27,7 @@ pack/  ──export──▶  dist/cobblemon-X.Y.Z.mrpack  ──▶  players (M
 
 ## Quick start (Docker host)
 
-Requirements: Linux with Docker 24+ and Compose v2, bash, 12 GB RAM for the default 6 GB heap.
+Requirements: Linux with Docker 24+ and Compose 2.24+ (the staging override uses `!override`), bash, 12 GB RAM for the default 6 GB heap.
 
 ```bash
 git clone https://github.com/gjchentw/compose-cobblemon.git
@@ -35,6 +35,7 @@ cd compose-cobblemon
 cp .env.example .env
 # edit .env: RCON_PASSWORD (openssl rand -base64 32), SERVER_NAME, SERVER_PUBLIC_HOST,
 #            MEMORY, and UID/GID from `id -u` / `id -g`
+mkdir -p data backups/keep dist # create them yourself so Docker does not create them as root
 scripts/pack-export.sh          # or download the release mrpack into dist/
 docker compose up -d
 scripts/smoke.sh                # waits for healthy, checks version, mods and RCON exposure

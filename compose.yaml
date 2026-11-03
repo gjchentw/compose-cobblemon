@@ -1,5 +1,12 @@
 # Production stack for the Cobblemon server. Services arrive task by task
 # (see tasks/plan.md). Everything configurable lives in .env; see .env.example.
+# Bounded container logs for services that run for months.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
 services:
   cobblemon:
     # Pinned by tag AND multi-arch index digest. Bump both together, via docs/upgrade.md.
@@ -7,11 +14,15 @@ services:
     container_name: cobblemon
     restart: unless-stopped
     stop_grace_period: 2m            # let the server save before Docker kills it
+    logging: *logging
     ports:
       - "${MC_PORT:-25565}:25565"    # RCON (25575) is never published
     environment:
       EULA: "TRUE"                   # https://aka.ms/MinecraftEULA, accepted by the operator
       TZ: "${TZ:-UTC}"
+      # --- ownership: the image chowns /data to this uid:gid on start; use the host admin's ids ---
+      UID: "${UID:-1000}"
+      GID: "${GID:-1000}"
       # --- pack: the same mrpack players install, server side only ---
       TYPE: "MODRINTH"
       MODRINTH_MODPACK: "/packs/cobblemon-${PACK_VERSION:?set PACK_VERSION in .env}.mrpack"
@@ -52,6 +63,9 @@ services:
     image: docker.io/itzg/mc-backup:2026.10.3@sha256:f86cf8466e203ebffaef2c020de35aaafbab18327ce0d3f63253f1b000d131d6
     container_name: cobblemon-backup
     restart: unless-stopped
+    logging: *logging
+    # Run as the host admin so archives in ./backups are theirs to move and delete.
+    user: "${UID:-1000}:${GID:-1000}"
     depends_on:
       cobblemon:
         condition: service_healthy

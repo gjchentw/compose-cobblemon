@@ -12,6 +12,7 @@ staging/
 dist/
 .build/
 
-# Logs and OS noise
+# Logs, caches and OS noise
 *.log
+__pycache__/
 .DS_Store

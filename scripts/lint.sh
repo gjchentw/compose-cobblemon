@@ -14,6 +14,7 @@ HADOLINT_IMAGE="ghcr.io/hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbf
 YAMLLINT_IMAGE="docker.io/pipelinecomponents/yamllint:0.35.27@sha256:f7f7b4f8824839e33690a880dbe20944128b0dc9c55522a0b92a29b3a905cecf"
 SHELLCHECK_IMAGE="docker.io/koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d"
 ACTIONLINT_IMAGE="docker.io/rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667"
+PYTHON_IMAGE="docker.io/library/python:3.14-alpine@sha256:eb2c62658b8d51bff0acc408504b76521d02030de56a8a3c1e830083e89b89d2"
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -81,11 +82,17 @@ lint_tree() {
     run_linter "$tree" "$ACTIONLINT_IMAGE" "${found[@]}" || status=1
   fi
 
+  collect "$tree" -name '*.py'
+  if [ "${#found[@]}" -gt 0 ]; then
+    log "== python syntax (${#found[@]} files)"
+    # ast.parse checks syntax without writing __pycache__ into the read-only mount.
+    run_linter "$tree" "$PYTHON_IMAGE" python3 -c \
+      'import ast, sys; [ast.parse(open(f).read(), f) for f in sys.argv[1:]]' "${found[@]}" || status=1
+  fi
+
   return "$status"
 }
 
-# self_test: the harness must pass a clean tree and fail a tree where each
-# linter has exactly one known violation.
 # self_test: the harness must pass a clean tree, and for each linter it must
 # report the expected rule on a file with exactly one known violation.
 # The scratch tree lives under the repo's .build/ (gitignored) because Docker

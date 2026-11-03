@@ -6,8 +6,8 @@ Guidance for AI coding agents (Claude Code, Cursor, Copilot, OpenCode, etc.) and
 
 `compose-cobblemon` is a Docker Compose project. It contains only infrastructure artifacts:
 
-- `Dockerfile` — server image definition
-- Compose files (`compose.yaml` and overrides under `examples/`)
+- `compose.yaml` and the `compose.staging.yaml` override (the server runs a pinned upstream image)
+- `tools/packwiz/Dockerfile` — the pack tooling image
 - Settings and templates (`.env.example`, `config/`)
 - Helper scripts (`scripts/`)
 - Documentation (`README.md`, `SPEC.md`, `tasks/`, `docs/`)
@@ -123,7 +123,7 @@ Test-driven development applies to infrastructure in this form:
 
 - **RED** — write or extend a check that fails before the change (a smoke step, a lint rule, a config assertion).
 - **GREEN** — make the smallest change that turns it green.
-- **Regression** — run every level the task names, plus `docker compose config` on every file under `examples/`.
+- **Regression** — run every level the task names, plus `docker compose config` for both the production and the staging file sets.
 
 A task is not done until its named levels pass and the output is shown to the human. "It looks right" is never evidence.
 
@@ -159,7 +159,7 @@ A task is not done until its named levels pass and the output is shown to the hu
 
 - Touch only what the current task names. No drive-by cleanup, refactoring or comment removal.
 - Prefer the boring Compose feature over a clever script. If a one-line `healthcheck` does the job, do not write a sidecar.
-- Each example under `examples/` must stand alone and pass L1 on its own.
+- The staging override stays a minimal diff over production: names, port, paths and MOTD only.
 
 ## Git Conventions
 

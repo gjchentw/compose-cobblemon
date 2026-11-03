@@ -1,7 +1,7 @@
 # Admin Guide
 
 Day-2 operations for the production stack. Every command runs from the repo
-root on the Docker host. The host needs Docker 24+ with Compose v2 and bash.
+root on the Docker host. The host needs Docker 24+ with Compose 2.24+ and bash.
 
 ## First deployment
 
@@ -12,12 +12,13 @@ root on the Docker host. The host needs Docker 24+ with Compose v2 and bash.
    - `SERVER_NAME`, `SERVER_PUBLIC_HOST`: what players will see and connect to
    - `MEMORY`: `6G` on a 12 GB host, `4G` on an 8 GB host
    - `UID` and `GID`: the output of `id -u` and `id -g`
-3. Put the pack in `dist/`. Either download `cobblemon-<version>.mrpack` from the
+3. `mkdir -p data backups/keep dist` so the directories belong to you, not to root.
+4. Put the pack in `dist/`. Either download `cobblemon-<version>.mrpack` from the
    [Releases page](https://github.com/gjchentw/compose-cobblemon/releases) into `dist/`,
    or build it locally with `scripts/pack-export.sh` (builds the tools image first).
-4. `docker compose up -d`, then `scripts/smoke.sh`. The first start downloads the
+5. `docker compose up -d`, then `scripts/smoke.sh`. The first start downloads the
    server-side mods and takes a few minutes; the smoke test waits up to 10 minutes.
-5. Open port 25565/tcp on the host firewall. Never open 25575 (RCON).
+6. Open port 25565/tcp on the host firewall. Never open 25575 (RCON).
 
 ## Everyday commands
 
