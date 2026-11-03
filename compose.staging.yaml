@@ -1,0 +1,27 @@
+# Staging override: run a second, independent stack next to production on
+# the same host for the upgrade SOP (docs/upgrade.md). Same image, same pack
+# directory, but its own project name, container names, port and data.
+#
+#   export COMPOSE_FILE=compose.yaml:compose.staging.yaml
+#   docker compose up -d && scripts/smoke.sh
+#
+# Everything not listed here is inherited from compose.yaml.
+name: cobblemon-staging
+
+services:
+  cobblemon:
+    container_name: cobblemon-staging
+    ports: !override
+      - "${STAGING_PORT:-25566}:25565"
+    environment:
+      MOTD: "[STAGING] ${SERVER_NAME:-Cobblemon Server} | Pack ${PACK_VERSION}"
+    volumes: !override
+      - ./staging/data:/data
+      - ./dist:/packs:ro
+      - ./config/server-icon.png:/data/server-icon.png:ro
+
+  backup:
+    container_name: cobblemon-staging-backup
+    volumes: !override
+      - ./staging/data:/data:ro
+      - ./staging/backups:/backups

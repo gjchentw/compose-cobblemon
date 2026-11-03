@@ -48,16 +48,16 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh && docker compose config -q`; `scripts/restore-drill.sh`
   - Files: `compose.yaml`, `.env.example`, `scripts/restore-drill.sh`, `.gitignore`
 
-- [ ] Checkpoint B: L1 through L4 green locally; human reviews `docker compose config` output and `.env.example`
+- [x] Checkpoint B: L1 through L4 green locally; human reviews `docker compose config` output and `.env.example`
 
 ## Phase 3: Staging and release pipeline
 
-- [ ] Task 9: Staging override
+- [x] Task 9: Staging override
   - Acceptance: staging config differs only in names, port, paths; prod and staging run together on 25565 and 25566; smoke passes against staging
   - Verify: `docker compose -f compose.yaml -f compose.staging.yaml config -q`; `COMPOSE_FILE=compose.yaml:compose.staging.yaml COMPOSE_PROJECT_NAME=cobblemon-staging scripts/smoke.sh`
   - Files: `compose.staging.yaml`, `scripts/smoke.sh`, `scripts/persist-test.sh`, `scripts/staging-clone-world.sh`, `.env.example`
 
-- [ ] Task 10: Version contract and release script
+- [x] Task 10: Version contract and release script
   - Acceptance: `version-check.sh` passes on HEAD and fails on mismatch; `release.sh --dry-run` prints steps; real run on a throwaway branch produces commit, tag and dist file
   - Verify: `scripts/lint.sh`; `scripts/version-check.sh`
   - Files: `scripts/version-check.sh`, `scripts/release.sh`, `docs/releases.md`
