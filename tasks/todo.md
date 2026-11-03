@@ -29,11 +29,11 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/`
   - Files: `pack/options.txt`, `scripts/make-servers-dat.py`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `.env.example`
 
-- [ ] Checkpoint A: L1 and L2 green; human imports the mrpack into Modrinth App and reviews the side table and `options.txt`
+- [x] Checkpoint A: L1 and L2 green; human imports the mrpack into Modrinth App and reviews the side table and `options.txt`
 
 ## Phase 2: Production server
 
-- [ ] Task 6: Production server service and smoke test
+- [x] Task 6: Production server service and smoke test
   - Acceptance: `up -d` healthy within 10 min with local `MEMORY=3G`; status reports 1.21.1; no client-only JAR in `data/mods`; RCON not published; image pinned by multi-arch index digest; `SPEC.md` digest corrected
   - Verify: `scripts/lint.sh && docker compose config -q`; `scripts/smoke.sh`; `docker buildx imagetools inspect <ref>`
   - Files: `compose.yaml`, `.env.example`, `scripts/smoke.sh`, `config/server-icon.png`, `SPEC.md`

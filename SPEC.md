@@ -156,7 +156,7 @@ One service, showing every convention at once:
 services:
   cobblemon:
     # Pinned by tag AND digest. Bump both together, via the upgrade SOP.
-    image: itzg/minecraft-server:2026.10.1-java21@sha256:801b971997572630349710252725be2b0bb877ea881b8d5ee6eece85a42b37cc
+    image: itzg/minecraft-server:2026.10.1-java21@sha256:07ab333a8542208c4c863a78fd3cf3fd1138d5a2e118306e1a316d202f69ab74
     container_name: cobblemon
     restart: unless-stopped
     stop_grace_period: 2m            # let the server save before Docker kills it
@@ -321,6 +321,6 @@ No open questions remain.
 - itzg Modrinth modpack variables, including local `.mrpack` paths: https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/mod-platforms/modrinth-modpacks/
 - itzg Java tags and pinned release tag format: https://docker-minecraft-server.readthedocs.io/en/latest/versions/java/
 - itzg healthcheck: https://docker-minecraft-server.readthedocs.io/en/latest/misc/healthcheck/
-- Image tag `2026.10.1-java21`, linux/amd64 digest `sha256:801b971997572630349710252725be2b0bb877ea881b8d5ee6eece85a42b37cc`: https://hub.docker.com/v2/repositories/itzg/minecraft-server/tags/2026.10.1-java21
+- Image tag `2026.10.1-java21`, multi-arch index digest `sha256:07ab333a8542208c4c863a78fd3cf3fd1138d5a2e118306e1a316d202f69ab74` (linux/amd64 and linux/arm64, verified with `docker buildx imagetools inspect`): https://hub.docker.com/v2/repositories/itzg/minecraft-server/tags/2026.10.1-java21
 - itzg/mc-backup sidecar usage and variables: https://github.com/itzg/docker-mc-backup
 - packwiz getting started and export: https://packwiz.infra.link/tutorials/creating/getting-started/

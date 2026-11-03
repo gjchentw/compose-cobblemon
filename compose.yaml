@@ -1,6 +1,52 @@
 # Production stack for the Cobblemon server. Services arrive task by task
 # (see tasks/plan.md). Everything configurable lives in .env; see .env.example.
 services:
+  cobblemon:
+    # Pinned by tag AND multi-arch index digest. Bump both together, via docs/upgrade.md.
+    image: docker.io/itzg/minecraft-server:2026.10.1-java21@sha256:07ab333a8542208c4c863a78fd3cf3fd1138d5a2e118306e1a316d202f69ab74
+    container_name: cobblemon
+    restart: unless-stopped
+    stop_grace_period: 2m            # let the server save before Docker kills it
+    ports:
+      - "${MC_PORT:-25565}:25565"    # RCON (25575) is never published
+    environment:
+      EULA: "TRUE"                   # https://aka.ms/MinecraftEULA, accepted by the operator
+      TZ: "${TZ:-UTC}"
+      # --- pack: the same mrpack players install, server side only ---
+      TYPE: "MODRINTH"
+      MODRINTH_MODPACK: "/packs/cobblemon-${PACK_VERSION:?set PACK_VERSION in .env}.mrpack"
+      MODRINTH_OVERRIDES_EXCLUSIONS: "options.txt,servers.dat"   # client-only override files
+      # --- JVM ---
+      MEMORY: "${MEMORY:-6G}"
+      USE_AIKAR_FLAGS: "true"
+      # --- gameplay ---
+      SERVER_NAME: "${SERVER_NAME:-Cobblemon Server}"
+      MOTD: "${SERVER_NAME:-Cobblemon Server} | Pack ${PACK_VERSION}"
+      MAX_PLAYERS: "${MAX_PLAYERS:-12}"
+      VIEW_DISTANCE: "${VIEW_DISTANCE:-10}"
+      SIMULATION_DISTANCE: "${SIMULATION_DISTANCE:-6}"
+      DIFFICULTY: "${DIFFICULTY:-normal}"
+      MODE: "${MODE:-survival}"
+      PVP: "${PVP:-false}"
+      ONLINE_MODE: "true"
+      ENABLE_WHITELIST: "true"
+      ENFORCE_WHITELIST: "true"
+      # --- admin: RCON stays on the internal network; use `docker compose exec cobblemon rcon-cli` ---
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "${RCON_PASSWORD:?set RCON_PASSWORD in .env}"
+    volumes:
+      - ./data:/data
+      - ./dist:/packs:ro
+      - ./config/server-icon.png:/data/server-icon.png:ro
+    healthcheck:
+      test: ["CMD", "mc-health"]
+      start_period: 5m               # modded startup is slow; the image default is too strict
+      interval: 15s
+      timeout: 10s
+      retries: 20
+    stdin_open: true
+    tty: true
+
   # packwiz tooling for pack/. Profile "tools": never started with the server.
   packwiz:
     profiles: ["tools"]
