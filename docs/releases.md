@@ -7,3 +7,4 @@ the contract; `scripts/release.sh` cuts a release and appends a row below.
 
 | Date | Pack | Minecraft | Fabric loader | Cobblemon | Server image | Notes |
 |---|---|---|---|---|---|---|
+| 2026-11-03 | 1.0.0-rc.1 | 1.21.1 | 0.20.1 | 1.8.4 | 2026.10.1-java21 | |
