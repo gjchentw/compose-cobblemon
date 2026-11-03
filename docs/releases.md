@@ -7,4 +7,4 @@ the contract; `scripts/release.sh` cuts a release and appends a row below.
 
 | Date | Pack | Minecraft | Fabric loader | Cobblemon | Server image | Notes |
 |---|---|---|---|---|---|---|
-| 2026-11-03 | 1.0.0-rc.1 | 1.21.1 | 0.20.1 | 1.8.4 | 2026.10.1-java21 | |
+| 2026-11-03 | 1.0.0-rc.1 | 1.21.1 | 0.20.1 | 1.8.4 | 2026.10.1-java21 | Release pipeline exercised end to end (CI run 41644430544). Client test: pack mods launched with portablemc (Fabric 1.21.1/0.20.1, Mojang Java 21) and joined the local server with the gjchen account; Cobblemon requires Java 21 exactly. Pack carried the placeholder host (repository variables unset). |

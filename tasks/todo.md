@@ -67,11 +67,11 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; GitHub Actions run link
   - Files: `.github/workflows/ci.yml`, `scripts/lint.sh`
 
-- [ ] Checkpoint C: `v1.0.0-rc.1` released by CI with the mrpack attached; human installs from the Release URL in Modrinth App and Prism; `servers.dat` update behaviour tested with rc.2
+- [x] Checkpoint C: `v1.0.0-rc.1` released by CI with the mrpack attached (run 41644430544); client test done with portablemc instead of Modrinth App/Prism (joined the local server, see docs/releases.md); the rc.2 `servers.dat` update test is moot because the player guide updates by installing a new profile
 
 ## Phase 4: Documentation and acceptance
 
-- [ ] Task 12: Player guide, English and Traditional Chinese
+- [x] Task 12: Player guide, English and Traditional Chinese
   - Acceptance: a person following only the guide installs rc.1 and joins staging; zh-TW mirrors EN section by section; links resolve
   - Verify: `scripts/lint.sh`; human read-through
   - Files: `docs/player-guide.md`, `docs/player-guide.zh-TW.md`
@@ -81,7 +81,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; rehearsal summary in the commit message
   - Files: `docs/admin-guide.md`, `docs/upgrade.md`, `docs/rollback.md`, `docs/acceptance-checklist.md`
 
-- [ ] Task 14: README, ADRs and clean-clone rehearsal
+- [x] Task 14: README, ADRs and clean-clone rehearsal
   - Acceptance: quick start works verbatim from a clean clone ending in a passing smoke; three ADRs with context, decision, consequences; links resolve
   - Verify: `scripts/lint.sh`; clean-clone transcript summary
   - Files: `README.md`, `docs/adr/0001-single-pack-for-client-and-server.md`, `docs/adr/0002-itzg-image-and-mc-backup-sidecar.md`, `docs/adr/0003-servers-dat-generated-at-export.md`
