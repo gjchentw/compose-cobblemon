@@ -88,7 +88,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           notes="$(grep -F "| ${GITHUB_REF_NAME#v} |" docs/releases.md || true)"
-          gh release create "$GITHUB_REF_NAME" dist/*.mrpack \
+          prerelease=""
+          case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
+          # shellcheck disable=SC2086  # $prerelease is either empty or one flag
+          gh release create "$GITHUB_REF_NAME" dist/*.mrpack $prerelease \
             --title "$GITHUB_REF_NAME" --notes "${notes:-Release $GITHUB_REF_NAME}"
 
   smoke:
