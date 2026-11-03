@@ -43,7 +43,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; `scripts/persist-test.sh`
   - Files: `scripts/persist-test.sh`, `compose.yaml`
 
-- [ ] Task 8: Backup sidecar and restore drill
+- [x] Task 8: Backup sidecar and restore drill
   - Acceptance: startup backup and `backup now` both produce archives in `backups/`; restore drill extracts the newest archive and finds `world/level.dat` and `whitelist.json`; keep location confirmed outside prune scope
   - Verify: `scripts/lint.sh && docker compose config -q`; `scripts/restore-drill.sh`
   - Files: `compose.yaml`, `.env.example`, `scripts/restore-drill.sh`, `.gitignore`

@@ -47,6 +47,29 @@ services:
     stdin_open: true
     tty: true
 
+  backup:
+    # Companion image from the same author; coordinates save-off/save-on over RCON.
+    image: docker.io/itzg/mc-backup:2026.10.3@sha256:f86cf8466e203ebffaef2c020de35aaafbab18327ce0d3f63253f1b000d131d6
+    container_name: cobblemon-backup
+    restart: unless-stopped
+    depends_on:
+      cobblemon:
+        condition: service_healthy
+    environment:
+      TZ: "${TZ:-UTC}"
+      RCON_HOST: cobblemon
+      RCON_PASSWORD: "${RCON_PASSWORD:?set RCON_PASSWORD in .env}"
+      BACKUP_METHOD: tar
+      INITIAL_DELAY: "0"             # compose already waited for the server to be healthy
+      BACKUP_ON_STARTUP: "true"
+      BACKUP_INTERVAL: "${BACKUP_INTERVAL:-24h}"
+      PAUSE_IF_NO_PLAYERS: "${PAUSE_IF_NO_PLAYERS:-true}"
+      PRUNE_BACKUPS_DAYS: "${PRUNE_BACKUPS_DAYS:-14}"
+      # Pruning only looks at the top level of /backups, so backups/keep/ is safe for pre-upgrade archives.
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups
+
   # packwiz tooling for pack/. Profile "tools": never started with the server.
   packwiz:
     profiles: ["tools"]
