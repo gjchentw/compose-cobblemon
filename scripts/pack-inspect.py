@@ -1,99 +1,142 @@
 #!/usr/bin/env python3
-"""Assert an exported .mrpack matches the expected pack contents.
+"""Assert an exported .mrpack matches the committed pack exactly.
 
 Usage: pack-inspect.py <file.mrpack> <expected-version> --name NAME --host HOST
-                       [--options /work/pack/options.txt]
+                       [--pack /work/pack]
 
-Reads modrinth.index.json and checks the pack metadata, the Minecraft and
-Fabric loader pins, and that every expected mod is present exactly once with
-the client/server env markers packwiz derives from its `side`. Any mod in the
-index that is not expected is a failure too, so the list stays exhaustive.
-Also checks the client overrides: options.txt must equal the committed file
-and servers.dat must carry the server name and host it was generated from.
-Standard library only; runs inside the tools image.
+Two independent sources are compared against modrinth.index.json:
+
+- pack/ (pack.toml and mods/*.pw.toml): the exact Minecraft and Fabric loader
+  pins, and the exact filename of every mod. A mod whose version drifted
+  (for example after `packwiz update --all`) therefore fails here.
+- SIDES below: the side table approved in tasks/plan.md. It must list exactly
+  the mods present in pack/, and each mod file's `side` must match it, so an
+  unplanned dependency or a changed side fails here.
+
+Every mod must come from cdn.modrinth.com, the overrides must be exactly
+options.txt (identical to the committed file) and servers.dat (carrying the
+name and host it was generated from). Standard library only.
 """
 import argparse
-import json
+import pathlib
 import sys
+import tomllib
 import zipfile
+import json
+from urllib.parse import urlparse
 
-MINECRAFT = "1.21.1"
-
-# name -> (filename token matched case-insensitively, (client env, server env))
-BOTH = ("required", "required")
-CLIENT = ("required", "unsupported")
-EXPECTED = {
+SIDES = {
     # required
-    "cobblemon": ("cobblemon-fabric-", BOTH),
-    "fabric-api": ("fabric-api-", BOTH),
+    "cobblemon": "both",
+    "fabric-api": "both",
     # performance
-    "sodium": ("sodium-fabric-", CLIENT),
-    "lithium": ("lithium-fabric-", BOTH),
-    "ferrite-core": ("ferritecore-", BOTH),
-    "immediatelyfast": ("immediatelyfast-fabric-", CLIENT),
-    "entityculling": ("entityculling-fabric-", CLIENT),
+    "sodium": "client",
+    "lithium": "both",
+    "ferrite-core": "both",
+    "immediatelyfast": "client",
+    "entityculling": "client",
     # quality of life
-    "modmenu": ("modmenu-", CLIENT),
-    "placeholder-api": ("placeholder-api-", CLIENT),  # required by Mod Menu
-    "emi": ("emi-", CLIENT),
-    "xaeros-minimap": ("xaerominimap-", CLIENT),
-    "xaeros-world-map": ("xaeroworldmap-", CLIENT),
-    "appleskin": ("appleskin-fabric-", BOTH),
-    "mouse-tweaks": ("mousetweaks-fabric-", CLIENT),
+    "modmenu": "client",
+    "placeholder-api": "client",  # required by Mod Menu
+    "emi": "client",
+    "xaeros-minimap": "client",
+    "xaeros-world-map": "client",
+    "appleskin": "both",
+    "mouse-tweaks": "client",
 }
+ENV = {
+    "both": ("required", "required"),
+    "client": ("required", "unsupported"),
+    "server": ("unsupported", "required"),
+}
+ALLOWED_OVERRIDES = {"overrides/options.txt", "overrides/servers.dat"}
+DOWNLOAD_HOST = "cdn.modrinth.com"
 
 
-def main(path, version, name, host, options_path):
+def read_pack(pack_dir):
+    pack = tomllib.loads((pack_dir / "pack.toml").read_text())
+    mods = {}
+    for path in sorted((pack_dir / "mods").glob("*.pw.toml")):
+        mod = tomllib.loads(path.read_text())
+        mods[path.name[: -len(".pw.toml")]] = (mod["filename"], mod.get("side", "both"))
+    return pack, mods
+
+
+def main(args):
     failures = []
-    with zipfile.ZipFile(path) as z:
-        index = json.loads(z.read("modrinth.index.json"))
-        names = set(z.namelist())
-        overrides = {n: z.read(n) for n in names if n.startswith("overrides/") and not n.endswith("/")}
 
     def check(cond, msg):
         if not cond:
             failures.append(msg)
 
+    pack_dir = pathlib.Path(args.pack)
+    pack, mods = read_pack(pack_dir)
+    with zipfile.ZipFile(args.file) as z:
+        index = json.loads(z.read("modrinth.index.json"))
+        overrides = {n: z.read(n) for n in z.namelist() if n.startswith("overrides/") and not n.endswith("/")}
+
+    # pack metadata and pins
     check(index.get("formatVersion") == 1, "formatVersion is not 1")
     check(index.get("game") == "minecraft", "game is not minecraft")
-    check(index.get("versionId") == version,
-          f"versionId {index.get('versionId')!r} != expected {version!r}")
+    check(index.get("versionId") == args.version,
+          f"versionId {index.get('versionId')!r} != expected {args.version!r}")
+    check(pack["version"] == args.version,
+          f"pack.toml version {pack['version']!r} != expected {args.version!r}")
     deps = index.get("dependencies", {})
-    check(deps.get("minecraft") == MINECRAFT,
-          f"minecraft {deps.get('minecraft')!r} != {MINECRAFT!r}")
-    check(bool(deps.get("fabric-loader")), "fabric-loader is not pinned")
+    versions = pack["versions"]
+    check(deps.get("minecraft") == versions["minecraft"],
+          f"index minecraft {deps.get('minecraft')!r} != pack.toml {versions['minecraft']!r}")
+    check(deps.get("fabric-loader") == versions["fabric"],
+          f"index fabric-loader {deps.get('fabric-loader')!r} != pack.toml {versions['fabric']!r}")
 
+    # side table and pack/mods must list exactly the same mods, with the same sides
+    check(set(mods) == set(SIDES),
+          f"pack/mods and the side table differ: only in pack {sorted(set(mods) - set(SIDES))}, "
+          f"only in table {sorted(set(SIDES) - set(mods))}")
+    for name, (_, side) in mods.items():
+        if name in SIDES:
+            check(side == SIDES[name], f"{name}: side {side!r} in pack/mods != {SIDES[name]!r} in the side table")
+
+    # every mod file must appear in the index exactly once, by exact filename, with the right env
     files = index.get("files", [])
-    mods = [f for f in files if f["path"].lower().startswith("mods/")]
-    matched = set()
-    for mod, (token, (client, server)) in EXPECTED.items():
-        hits = [f for f in mods if token in f["path"].lower()]
-        if len(hits) != 1:
-            failures.append(f"{mod}: expected 1 file matching {token!r}, found {len(hits)}")
+    by_path = {}
+    for f in files:
+        check(f["path"] not in by_path, f"duplicate index entry {f['path']}")
+        by_path[f["path"]] = f
+    expected_paths = set()
+    for name, (filename, side) in sorted(mods.items()):
+        path = f"mods/{filename}"
+        expected_paths.add(path)
+        entry = by_path.get(path)
+        if entry is None:
+            failures.append(f"{name}: {path} missing from the index")
             continue
-        env = hits[0].get("env", {})
+        env = entry.get("env", {})
         got = (env.get("client"), env.get("server"))
-        check(got == (client, server), f"{mod}: env {got} != {(client, server)}")
-        matched.add(hits[0]["path"])
-    for f in mods:
-        if f["path"] not in matched:
-            failures.append(f"unexpected mod in index: {f['path']}")
+        want = ENV[SIDES.get(name, side)]
+        check(got == want, f"{name}: env {got} != {want}")
+    for path in sorted(set(by_path) - expected_paths):
+        failures.append(f"unexpected index entry: {path}")
+    for f in files:
+        for url in f.get("downloads", []):
+            check(urlparse(url).hostname == DOWNLOAD_HOST, f"{f['path']}: download host is not {DOWNLOAD_HOST}: {url}")
+        check(bool(f.get("downloads")), f"{f['path']}: no download URL")
 
-    with open(options_path, "rb") as handle:
-        expected_options = handle.read()
+    # overrides
+    check(set(overrides) == ALLOWED_OVERRIDES,
+          f"overrides are {sorted(overrides)}, expected exactly {sorted(ALLOWED_OVERRIDES)}")
+    expected_options = (pack_dir / "options.txt").read_bytes()
     check(overrides.get("overrides/options.txt") == expected_options,
-          "overrides/options.txt missing or differs from the committed options.txt")
+          "overrides/options.txt differs from the committed pack/options.txt")
     servers = overrides.get("overrides/servers.dat", b"")
-    check(bool(servers), "overrides/servers.dat missing")
-    check(name.encode("utf-8") in servers, f"servers.dat does not contain name {name!r}")
-    check(host.encode("utf-8") in servers, f"servers.dat does not contain host {host!r}")
+    check(args.name.encode("utf-8") in servers, f"servers.dat does not contain name {args.name!r}")
+    check(args.host.encode("utf-8") in servers, f"servers.dat does not contain host {args.host!r}")
 
-    print(f"{path}: version {index.get('versionId')}, minecraft {deps.get('minecraft')}, "
-          f"fabric-loader {deps.get('fabric-loader')}, {len(mods)} mods, "
-          f"{len(files) - len(mods)} other files")
-    for f in sorted(mods, key=lambda f: f["path"]):
-        env = f.get("env", {})
-        print(f"  {f['path']}  client={env.get('client')} server={env.get('server')}")
+    print(f"{args.file}: version {index.get('versionId')}, minecraft {deps.get('minecraft')}, "
+          f"fabric-loader {deps.get('fabric-loader')}, {len(files)} files, {len(overrides)} overrides")
+    for path in sorted(by_path):
+        env = by_path[path].get("env", {})
+        print(f"  {path}  client={env.get('client')} server={env.get('server')}")
     for n in sorted(overrides):
         print(f"  {n}  ({len(overrides[n])} bytes)")
     if failures:
@@ -111,6 +154,5 @@ if __name__ == "__main__":
     parser.add_argument("version")
     parser.add_argument("--name", required=True)
     parser.add_argument("--host", required=True)
-    parser.add_argument("--options", default="/work/pack/options.txt")
-    a = parser.parse_args()
-    sys.exit(main(a.file, a.version, a.name, a.host, a.options))
+    parser.add_argument("--pack", default="/work/pack")
+    sys.exit(main(parser.parse_args()))

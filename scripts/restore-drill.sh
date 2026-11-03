@@ -20,11 +20,13 @@ cid="$(docker compose ps -q "$service")"
 [ -n "$cid" ] || fail "no container for service $service; is the stack up?"
 
 log "== backup now (one-shot; the no-players pause is lifted for the drill)"
+docker compose exec -T "$service" touch /tmp/drill-marker
 docker compose exec -T -e PAUSE_IF_NO_PLAYERS=false "$service" backup now >&2
 
-log "== newest archive"
-archive="$(docker compose exec -T "$service" sh -c 'ls -t /backups/*.tgz /backups/*.tar.gz 2>/dev/null | head -n 1' | tr -d '\r')"
-[ -n "$archive" ] || fail "no archive found in /backups"
+log "== archive written by that backup"
+archive="$(docker compose exec -T "$service" sh -c \
+  'find /backups -maxdepth 1 \( -name "*.tgz" -o -name "*.tar.gz" \) -newer /tmp/drill-marker | sort | tail -n 1' | tr -d '\r')"
+[ -n "$archive" ] || fail "backup now produced no new archive in /backups"
 size="$(docker compose exec -T "$service" sh -c "wc -c < '$archive'" | tr -d ' \r')"
 log "$archive ($size bytes)"
 

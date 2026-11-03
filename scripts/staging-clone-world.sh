@@ -36,13 +36,15 @@ fi
 
 if [ -n "$prod_running" ]; then
   log "== pausing production saves (save-off, save-all flush)"
+  # The trap is installed before save-off so that any failure or Ctrl-C after
+  # this point still turns autosave back on.
+  trap 'if rcon save-on; then log "== production saves resumed"; else log "WARNING: save-on failed; run: docker compose exec cobblemon rcon-cli save-on"; fi' EXIT
   rcon save-off
   rcon save-all flush
-  trap 'rcon save-on; log "== production saves resumed"' EXIT
 fi
 
 log "== copying world, config and admin files into staging/data"
-# Run the copy in a container as root so ownership (uid 1000) is preserved on Linux hosts.
+# Run the copy in a container as root so file ownership is preserved on Linux hosts.
 COMPOSE_FILE=compose.yaml docker compose --progress quiet run --rm --no-deps -T --entrypoint sh \
   -v "$repo_root/staging/data:/staging" backup -c '
     set -e

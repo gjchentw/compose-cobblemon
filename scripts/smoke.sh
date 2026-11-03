@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # L3 smoke test: start the stack, wait for the server to become healthy,
-# then check version, log evidence, server-side mod set and RCON exposure.
+# then check the version, the current boot's log, the server-side mod set
+# and RCON exposure.
 #
 # Usage: scripts/smoke.sh
 # Env:   SMOKE_TIMEOUT  seconds to wait for healthy (default 600)
@@ -15,15 +16,25 @@ cd "$repo_root"
 
 timeout="${SMOKE_TIMEOUT:-600}"
 service="cobblemon"
-# Files that must never be installed server-side (client-only mods, by filename token).
-client_only="sodium immediatelyfast entityculling modmenu placeholder-api emi xaerominimap xaeroworldmap mousetweaks"
 
 log() { printf '%s\n' "$*" >&2; }
 fail() { log "FAIL: $*"; exit 1; }
 
-if [ "$(env_value RCON_PASSWORD)" = "replace-with-a-long-random-password" ]; then
-  fail "RCON_PASSWORD is still the placeholder from .env.example; set a real one in .env"
+rcon_password="$(env_value RCON_PASSWORD)"
+if [ -z "$rcon_password" ] || [ "$rcon_password" = "replace-with-a-long-random-password" ]; then
+  fail "RCON_PASSWORD is empty or still the placeholder; set a real one in .env"
 fi
+
+# The pinned Cobblemon version and the client-only jar list come from pack/,
+# the source of truth, so this test cannot drift from the pack.
+cobblemon_version="$(sed -n 's/^filename = "Cobblemon-fabric-\(.*\)+.*"$/\1/p' pack/mods/cobblemon.pw.toml)"
+[ -n "$cobblemon_version" ] || fail "cannot read the Cobblemon version from pack/mods/cobblemon.pw.toml"
+client_only=""
+for f in pack/mods/*.pw.toml; do
+  if grep -q '^side = "client"$' "$f"; then
+    client_only="$client_only $(sed -n 's/^filename = "\(.*\)"$/\1/p' "$f")"
+  fi
+done
 
 log "== docker compose up -d"
 docker compose --progress quiet up -d
@@ -36,22 +47,25 @@ status="$(docker compose exec -T "$service" mc-monitor status --host localhost -
 log "$status"
 printf '%s' "$status" | grep -c 'version=1\.21\.1' >/dev/null || fail "status does not report version 1.21.1"
 
-log "== log evidence"
-# grep -c reads all input; grep -q would exit early and, under pipefail, turn
-# printf's SIGPIPE into a failure once the log exceeds the pipe buffer.
-logs="$(docker compose logs --no-color "$service")"
-printf '%s' "$logs" | grep -c 'Done (' >/dev/null || fail "log has no 'Done (' line"
-printf '%s' "$logs" | grep -ci 'cobblemon' >/dev/null || fail "log never mentions cobblemon"
+# The game writes one log per boot, so latest.log is bounded and cannot be
+# confused with earlier boots of the same container.
+log "== current boot log (/data/logs/latest.log)"
+bootlog="$(docker compose exec -T "$service" cat /data/logs/latest.log)"
+printf '%s' "$bootlog" | grep -c 'Done (' >/dev/null || fail "boot log has no 'Done (' line"
+printf '%s' "$bootlog" | grep -Ec -- "- cobblemon ${cobblemon_version//./\\.}" >/dev/null \
+  || fail "Fabric did not list cobblemon $cobblemon_version in its mod table"
+log "Fabric loaded cobblemon $cobblemon_version"
 
 log "== server-side mod set"
 mods="$(docker compose exec -T "$service" sh -c 'ls /data/mods')"
 log "$mods"
-for token in $client_only; do
-  if printf '%s' "$mods" | grep -ci "$token" >/dev/null; then
-    fail "client-only mod installed on the server: $token"
+for jar in $client_only; do
+  if printf '%s\n' "$mods" | grep -Fxc "$jar" >/dev/null; then
+    fail "client-only mod installed on the server: $jar"
   fi
 done
-printf '%s' "$mods" | grep -ci 'cobblemon' >/dev/null || fail "cobblemon jar missing from /data/mods"
+printf '%s\n' "$mods" | grep -Fxc "Cobblemon-fabric-${cobblemon_version}+1.21.1.jar" >/dev/null \
+  || fail "Cobblemon-fabric-${cobblemon_version}+1.21.1.jar missing from /data/mods"
 
 log "== RCON must not be published"
 if [ -n "$(docker compose port "$service" 25575 2>/dev/null)" ]; then

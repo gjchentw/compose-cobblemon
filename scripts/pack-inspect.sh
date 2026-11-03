@@ -20,4 +20,4 @@ name="$(env_value SERVER_NAME)"
 host="$(env_value SERVER_PUBLIC_HOST)"
 
 docker compose --progress quiet --profile tools run --rm -T -w /work --entrypoint python3 \
-  packwiz scripts/pack-inspect.py "$file" "$version" --name "$name" --host "$host"
+  packwiz scripts/pack-inspect.py "$file" "$version" --name "$name" --host "$host" --pack /work/pack
