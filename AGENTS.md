@@ -19,6 +19,7 @@ There is no application code. "Tests" here are validation, build, smoke and pers
 - Everything committed to this repository is written in English: documentation, `SPEC.md`, task files, ADRs, comments in Dockerfiles, Compose files and scripts, commit messages and PR descriptions.
 - Conversation between the agent and the human may be in whatever language the human uses. Questions, answers and discussion are not bound by the English rule; written artifacts are.
 - When the human gives input in another language, the agent translates it into English before recording it in any file.
+- One exception, decided 2026-11-03: `docs/player-guide.zh-TW.md` is a Traditional Chinese copy of `docs/player-guide.md` for players. The English file is the primary version; any task that changes one changes both.
 
 ## Collaboration Protocol: The Agent Asks, the Human Decides
 
@@ -134,7 +135,7 @@ A task is not done until its named levels pass and the output is shown to the hu
 - Run the verification ladder before every commit.
 - Pin every image tag and every mod and loader version.
 - Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder.
-- Write in English in every committed file.
+- Write in English in every committed file, except `docs/player-guide.zh-TW.md`.
 
 **Ask first**
 
