@@ -34,22 +34,24 @@ wait_healthy "$service" "$timeout" || fail "server did not become healthy"
 log "== status query"
 status="$(docker compose exec -T "$service" mc-monitor status --host localhost --port 25565)"
 log "$status"
-printf '%s' "$status" | grep -q 'version=1\.21\.1' || fail "status does not report version 1.21.1"
+printf '%s' "$status" | grep -c 'version=1\.21\.1' >/dev/null || fail "status does not report version 1.21.1"
 
 log "== log evidence"
+# grep -c reads all input; grep -q would exit early and, under pipefail, turn
+# printf's SIGPIPE into a failure once the log exceeds the pipe buffer.
 logs="$(docker compose logs --no-color "$service")"
-printf '%s' "$logs" | grep -q 'Done (' || fail "log has no 'Done (' line"
-printf '%s' "$logs" | grep -qi 'cobblemon' || fail "log never mentions cobblemon"
+printf '%s' "$logs" | grep -c 'Done (' >/dev/null || fail "log has no 'Done (' line"
+printf '%s' "$logs" | grep -ci 'cobblemon' >/dev/null || fail "log never mentions cobblemon"
 
 log "== server-side mod set"
 mods="$(docker compose exec -T "$service" sh -c 'ls /data/mods')"
 log "$mods"
 for token in $client_only; do
-  if printf '%s' "$mods" | grep -qi "$token"; then
+  if printf '%s' "$mods" | grep -ci "$token" >/dev/null; then
     fail "client-only mod installed on the server: $token"
   fi
 done
-printf '%s' "$mods" | grep -qi 'cobblemon' || fail "cobblemon jar missing from /data/mods"
+printf '%s' "$mods" | grep -ci 'cobblemon' >/dev/null || fail "cobblemon jar missing from /data/mods"
 
 log "== RCON must not be published"
 if [ -n "$(docker compose port "$service" 25575 2>/dev/null)" ]; then
