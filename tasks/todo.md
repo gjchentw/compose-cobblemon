@@ -38,7 +38,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh && docker compose config -q`; `scripts/smoke.sh`; `docker buildx imagetools inspect <ref>`
   - Files: `compose.yaml`, `.env.example`, `scripts/smoke.sh`, `config/server-icon.png`, `SPEC.md`
 
-- [ ] Task 7: Persistence and graceful shutdown test
+- [x] Task 7: Persistence and graceful shutdown test
   - Acceptance: orderly stop under 2 min with save evidence in the log; world and admin files survive restart; RED after `docker compose kill` fails clearly
   - Verify: `scripts/lint.sh`; `scripts/persist-test.sh`
   - Files: `scripts/persist-test.sh`, `compose.yaml`

@@ -27,25 +27,9 @@ fi
 
 log "== docker compose up -d"
 docker compose --progress quiet up -d
-cid="$(docker compose ps -q "$service")"
-[ -n "$cid" ] || fail "no container for service $service"
 
 log "== waiting up to ${timeout}s for healthy"
-elapsed=0
-while :; do
-  health="$(docker inspect -f '{{.State.Health.Status}}' "$cid")"
-  case "$health" in
-    healthy) break ;;
-    unhealthy) docker compose logs --no-color --tail 40 "$service" >&2; fail "container is unhealthy" ;;
-  esac
-  if [ "$elapsed" -ge "$timeout" ]; then
-    docker compose logs --no-color --tail 40 "$service" >&2
-    fail "not healthy after ${timeout}s (last status: $health)"
-  fi
-  sleep 10
-  elapsed=$((elapsed + 10))
-done
-log "healthy after ~${elapsed}s"
+wait_healthy "$service" "$timeout" || fail "server did not become healthy"
 
 log "== status query"
 status="$(docker compose exec -T "$service" mc-monitor status --host localhost --port 25565)"

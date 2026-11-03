@@ -29,3 +29,36 @@ env_value() {
   echo "missing $key in the environment, .env and .env.example" >&2
   return 1
 }
+
+# wait_healthy SERVICE TIMEOUT_SECONDS
+# Polls the compose service's container health. Prints the elapsed time on
+# success; on unhealthy or timeout prints the last log lines and returns 1.
+wait_healthy() {
+  local service="$1" timeout="$2" cid health elapsed=0
+  cid="$(docker compose ps -q "$service")"
+  if [ -z "$cid" ]; then
+    echo "no container for service $service" >&2
+    return 1
+  fi
+  while :; do
+    health="$(docker inspect -f '{{.State.Health.Status}}' "$cid")"
+    case "$health" in
+      healthy)
+        echo "healthy after ~${elapsed}s" >&2
+        return 0
+        ;;
+      unhealthy)
+        docker compose logs --no-color --tail 40 "$service" >&2
+        echo "container is unhealthy" >&2
+        return 1
+        ;;
+    esac
+    if [ "$elapsed" -ge "$timeout" ]; then
+      docker compose logs --no-color --tail 40 "$service" >&2
+      echo "not healthy after ${timeout}s (last status: $health)" >&2
+      return 1
+    fi
+    sleep 10
+    elapsed=$((elapsed + 10))
+  done
+}
