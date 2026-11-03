@@ -9,7 +9,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; `git status --ignored`
   - Files: `.gitignore`, `scripts/lint.sh`, `.yamllint.yaml`, `.hadolint.yaml`
 
-- [ ] Task 2: packwiz tools image and `tools` profile
+- [x] Task 2: packwiz tools image and `tools` profile
   - Acceptance: tools image builds, hadolint clean, `packwiz --help` and `python3 --version` run, files owned by host user
   - Verify: `scripts/lint.sh`; `docker compose config -q`; `docker compose --profile tools build`; `docker compose --profile tools run --rm packwiz --help`
   - Files: `tools/packwiz/Dockerfile`, `compose.yaml`, `.env.example`

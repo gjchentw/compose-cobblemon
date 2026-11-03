@@ -1,0 +1,14 @@
+# Production stack for the Cobblemon server. Services arrive task by task
+# (see tasks/plan.md). Everything configurable lives in .env; see .env.example.
+services:
+  # packwiz tooling for pack/. Profile "tools": never started with the server.
+  packwiz:
+    profiles: ["tools"]
+    build:
+      context: tools/packwiz
+    image: compose-cobblemon/packwiz:local
+    # Run as the host user so files written to the bind mount are not root-owned.
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /work
+    volumes:
+      - ./:/work
