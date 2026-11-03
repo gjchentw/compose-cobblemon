@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # Export the pack from pack/ to dist/cobblemon-<version>.mrpack (L2).
 # The committed pack/ is copied to a fresh build directory first, so files
-# generated at export time never touch the source of truth.
+# generated at export time (servers.dat with the real server host) never
+# touch the source of truth.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
+# shellcheck source=scripts/lib.sh
+. "$repo_root/scripts/lib.sh"
+
+name="$(env_value SERVER_NAME)"
+host="$(env_value SERVER_PUBLIC_HOST)"
 
 version="$(sed -n 's/^version = "\(.*\)"$/\1/p' pack/pack.toml)"
 if [ -z "$version" ]; then
@@ -24,6 +30,8 @@ out="dist/cobblemon-$version.mrpack"
 run() {
   docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir" packwiz "$@"
 }
+docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir" --entrypoint python3 \
+  packwiz /work/scripts/make-servers-dat.py --name "$name" --host "$host" --out servers.dat
 run refresh
 run modrinth export -o "/work/$out"
 echo "exported $out" >&2

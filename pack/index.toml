@@ -69,3 +69,7 @@ metafile = true
 file = "mods/xaeros-world-map.pw.toml"
 hash = "aef0da568a2f3f8e496842f924b928bb1271ca0f20c75f3c31297798c92f92ea"
 metafile = true
+
+[[files]]
+file = "options.txt"
+hash = "9027809c34da04d55d5706b963d504be6293acf92dc5cb30a41f619e209d5c61"

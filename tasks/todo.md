@@ -24,7 +24,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/`
   - Files: `pack/mods/*.pw.toml`, `pack/index.toml`, `scripts/pack-inspect.sh`
 
-- [ ] Task 5: Client overrides: `options.txt` and generated `servers.dat`
+- [x] Task 5: Client overrides: `options.txt` and generated `servers.dat`
   - Acceptance: mrpack carries `overrides/options.txt` and a generated `overrides/servers.dat` with `SERVER_NAME` and `SERVER_PUBLIC_HOST`; `pack/` has no `servers.dat`; generator self-verifies
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/`
   - Files: `pack/options.txt`, `scripts/make-servers-dat.py`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `.env.example`
