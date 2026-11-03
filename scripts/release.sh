@@ -23,10 +23,9 @@ step() {
   fi
 }
 
-case "$version" in
-  [0-9]*.[0-9]*.[0-9]*) ;;
-  *) fail "usage: scripts/release.sh X.Y.Z[-rc.N] [--dry-run]" ;;
-esac
+if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$'; then
+  fail "usage: scripts/release.sh X.Y.Z[-rc.N] [--dry-run]"
+fi
 if [ -n "$(git status --porcelain)" ]; then
   fail "working tree is not clean; commit or stash first"
 fi
