@@ -14,7 +14,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; `docker compose config -q`; `docker compose --profile tools build`; `docker compose --profile tools run --rm packwiz --help`
   - Files: `tools/packwiz/Dockerfile`, `compose.yaml`, `.env.example`
 
-- [ ] Task 3: Pack skeleton with required mods, export and inspect scripts
+- [x] Task 3: Pack skeleton with required mods, export and inspect scripts
   - Acceptance: `pack.toml` pins 1.21.1, Fabric loader, version 1.0.0; Cobblemon 1.8.4 and Fabric API installed; export produces `dist/cobblemon-1.0.0.mrpack`; inspect passes; refresh is a no-op
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/`
   - Files: `pack/pack.toml`, `pack/index.toml`, `pack/mods/cobblemon.pw.toml`, `pack/mods/fabric-api.pw.toml`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`

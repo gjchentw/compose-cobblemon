@@ -9,6 +9,6 @@ services:
     image: compose-cobblemon/packwiz:local
     # Run as the host user so files written to the bind mount are not root-owned.
     user: "${UID:-1000}:${GID:-1000}"
-    working_dir: /work
+    working_dir: /work/pack
     volumes:
       - ./:/work
