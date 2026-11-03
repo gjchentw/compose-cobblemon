@@ -62,7 +62,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; `scripts/version-check.sh`
   - Files: `scripts/version-check.sh`, `scripts/release.sh`, `docs/releases.md`
 
-- [ ] Task 11: CI workflow
+- [x] Task 11: CI workflow
   - Acceptance: actionlint and yamllint clean; after the human approves the push, `lint`, `validate`, `pack` jobs green; `release` job wired for `v*` tags; `smoke` on manual dispatch
   - Verify: `scripts/lint.sh`; GitHub Actions run link
   - Files: `.github/workflows/ci.yml`, `scripts/lint.sh`

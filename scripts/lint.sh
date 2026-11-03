@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# L1 static checks: hadolint, yamllint and shellcheck, each run from a pinned
-# container image. The host needs only Docker and bash (3.2 or newer).
+# L1 static checks: hadolint, yamllint, shellcheck and actionlint, each run
+# from a pinned container image. The host needs only Docker and bash (3.2+).
 #
 # Usage:
 #   scripts/lint.sh              lint the whole repository
@@ -13,6 +13,7 @@ set -euo pipefail
 HADOLINT_IMAGE="ghcr.io/hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d"
 YAMLLINT_IMAGE="docker.io/pipelinecomponents/yamllint:0.35.27@sha256:f7f7b4f8824839e33690a880dbe20944128b0dc9c55522a0b92a29b3a905cecf"
 SHELLCHECK_IMAGE="docker.io/koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d"
+ACTIONLINT_IMAGE="docker.io/rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667"
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -74,6 +75,12 @@ lint_tree() {
     run_linter "$tree" "$SHELLCHECK_IMAGE" --shell=bash --external-sources "${found[@]}" || status=1
   fi
 
+  collect "$tree" -path './.github/workflows/*.yml' -o -path './.github/workflows/*.yaml'
+  if [ "${#found[@]}" -gt 0 ]; then
+    log "== actionlint (${#found[@]} files)"
+    run_linter "$tree" "$ACTIONLINT_IMAGE" "${found[@]}" || status=1
+  fi
+
   return "$status"
 }
 
@@ -106,6 +113,15 @@ GOOD
 set -euo pipefail
 echo "ok"
 GOOD
+  mkdir -p "$good/.github/workflows" "$bad/.github/workflows"
+  cat > "$good/.github/workflows/ok.yml" <<'GOOD'
+on: push
+jobs:
+  ok:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+GOOD
 
   cat > "$bad/Dockerfile" <<'BAD'
 FROM alpine
@@ -119,6 +135,13 @@ BAD
 #!/usr/bin/env bash
 cat $1
 BAD
+  cat > "$bad/.github/workflows/bad.yml" <<'BAD'
+on: push
+jobs:
+  bad:
+    steps:
+      - run: echo bad
+BAD
 
   log "-- self-test: clean tree must pass"
   if lint_tree "$good"; then
@@ -129,12 +152,14 @@ BAD
   fi
 
   log "-- self-test: each linter must report the expected rule"
-  for pair in "Dockerfile:DL3006" "dup.yaml:key-duplicates" "unquoted.sh:SC2086"; do
+  local n=0
+  for pair in "Dockerfile:DL3006" "dup.yaml:key-duplicates" "unquoted.sh:SC2086" ".github/workflows/bad.yml:runs-on"; do
     local file="${pair%%:*}" rule="${pair#*:}" case_dir
     # One directory per case: Docker Desktop may serve stale contents for a
     # path that was deleted and recreated while the daemon still has it cached.
-    case_dir="$tmp/case-$file"
-    mkdir -p "$case_dir"
+    n=$((n + 1))
+    case_dir="$tmp/case-$n"
+    mkdir -p "$case_dir/$(dirname "$file")"
     cp "$bad/$file" "$case_dir/$file"
     if out="$(lint_tree "$case_dir" 2>&1)"; then
       log "FAIL $file was not flagged"
