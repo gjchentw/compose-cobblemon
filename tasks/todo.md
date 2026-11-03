@@ -76,7 +76,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; human read-through
   - Files: `docs/player-guide.md`, `docs/player-guide.zh-TW.md`
 
-- [ ] Task 13: Admin runbooks
+- [x] Task 13: Admin runbooks
   - Acceptance: every admin command executed once locally; upgrade SOP rehearsed on staging; rollback SOP rehearsed with the rc backup; checklist covers the ten Phase 1 items
   - Verify: `scripts/lint.sh`; rehearsal summary in the commit message
   - Files: `docs/admin-guide.md`, `docs/upgrade.md`, `docs/rollback.md`, `docs/acceptance-checklist.md`
