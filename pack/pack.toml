@@ -1,6 +1,6 @@
 name = "Cobblemon Pack"
 author = "compose-cobblemon"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 pack-format = "packwiz:1.1.0"
 
 [index]
