@@ -32,3 +32,6 @@ host should need nothing but Docker and bash.
   not root-owned on Linux hosts.
 - Docker's health status survives a stop/start until the next probe, so
   `scripts/lib.sh` waits for a fresh probe before trusting "healthy".
+- Accepted trust boundary: the Fabric loader, the vanilla server jar and the JRE are
+  fetched by the image from Fabric meta and Mojang over TLS; this repository pins their
+  versions but holds no hashes for them. Mods, by contrast, are sha512-pinned.

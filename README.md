@@ -33,7 +33,8 @@ pack/  ──export──▶  dist/cobblemon-X.Y.Z.mrpack  ──▶  players (M
    `SERVER_PUBLIC_HOST` (the address players connect to, for example `mc.example.org`) and
    `SERVER_NAME` (what players see in their server list). Tag builds refuse to publish a pack
    without them.
-3. Optional: replace `config/server-icon.png`, and change `name` and `author` in `pack/pack.toml`.
+3. Optional: replace `config/server-icon.png`, change `name` and `author` in `pack/pack.toml`,
+   and reset `docs/releases.md` to the table header so it records your releases, not ours.
 4. Cut a release from your clone with `scripts/release.sh X.Y.Z` and push the tag. CI attaches
    `cobblemon-X.Y.Z.mrpack` to a GitHub Release; send players the link.
 
