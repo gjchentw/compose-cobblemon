@@ -106,8 +106,10 @@ jobs:
             --title "$GITHUB_REF_NAME" --notes "${notes:-Release $GITHUB_REF_NAME}"
 
   smoke:
-    name: L3 and L4 on a hosted runner (manual)
-    if: github.event_name == 'workflow_dispatch'
+    # Manual dispatch (needs the workflow on the default branch), or push a branch
+    # named smoke/<anything> to run L3 and L4 on a hosted Linux runner from any ref.
+    name: L3 and L4 on a hosted runner (manual or smoke/* branch)
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/heads/smoke/')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
