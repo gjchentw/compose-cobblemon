@@ -17,8 +17,6 @@ cd "$repo_root"
 timeout="${SMOKE_TIMEOUT:-600}"
 service="cobblemon"
 
-log() { printf '%s\n' "$*" >&2; }
-fail() { log "FAIL: $*"; exit 1; }
 
 rcon_password="$(env_value RCON_PASSWORD)"
 if [ -z "$rcon_password" ] || [ "$rcon_password" = "replace-with-a-long-random-password" ]; then

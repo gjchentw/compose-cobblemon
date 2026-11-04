@@ -14,8 +14,6 @@ cd "$repo_root"
 # shellcheck source=scripts/lib.sh
 . "$repo_root/scripts/lib.sh"
 
-log() { printf '%s\n' "$*" >&2; }
-fail() { log "FAIL: $*"; exit 1; }
 
 staging_files="compose.yaml:compose.staging.yaml"
 if [ -n "$(COMPOSE_FILE="$staging_files" docker compose ps -q --status running cobblemon 2>/dev/null)" ]; then

@@ -10,12 +10,9 @@ cd "$repo_root"
 # shellcheck source=scripts/lib.sh
 . "$repo_root/scripts/lib.sh"
 
-version="$(sed -n 's/^version = "\(.*\)"$/\1/p' pack/pack.toml)"
+version="$(pack_version)"
 file="${1:-dist/cobblemon-$version.mrpack}"
-if [ ! -f "$file" ]; then
-  echo "missing $file; run scripts/pack-export.sh first" >&2
-  exit 1
-fi
+[ -f "$file" ] || fail "missing $file; run scripts/pack-export.sh first"
 name="$(env_value SERVER_NAME)"
 host="$(env_value SERVER_PUBLIC_HOST)"
 

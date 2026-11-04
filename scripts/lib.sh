@@ -3,6 +3,17 @@
 #   # shellcheck source=scripts/lib.sh
 #   . "$repo_root/scripts/lib.sh"
 
+log() { printf '%s\n' "$*" >&2; }
+fail() { log "FAIL: $*"; exit 1; }
+
+# pack_version: the version field of pack/pack.toml (the release version).
+pack_version() {
+  local v
+  v="$(sed -n 's/^version = "\(.*\)"$/\1/p' pack/pack.toml)"
+  [ -n "$v" ] || fail "pack/pack.toml has no version field"
+  printf '%s\n' "$v"
+}
+
 # env_value KEY
 # Prints KEY from the environment, else from .env, else from .env.example.
 # The value is everything after the first '=', with one pair of surrounding

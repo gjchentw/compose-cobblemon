@@ -9,13 +9,13 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
+# shellcheck source=scripts/lib.sh
+. "$repo_root/scripts/lib.sh"
 
 version="${1:-}"
 dry_run=""
 [ "${2:-}" = "--dry-run" ] && dry_run=1
 
-log() { printf '%s\n' "$*" >&2; }
-fail() { log "FAIL: $*"; exit 1; }
 step() {
   log "== $*"
   if [ -z "$dry_run" ]; then

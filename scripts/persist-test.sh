@@ -24,8 +24,6 @@ timeout="${SMOKE_TIMEOUT:-600}"
 service="cobblemon"
 marker="persisttest"
 
-log() { printf '%s\n' "$*" >&2; }
-fail() { log "FAIL: $*"; exit 1; }
 rcon() { docker compose exec -T "$service" rcon-cli "$@"; }
 
 cid="$(docker compose ps -q "$service")"

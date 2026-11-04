@@ -41,10 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Create .env from the example
-        run: |
-          cp .env.example .env
-          sed -i "s/^UID=.*/UID=$(id -u)/; s/^GID=.*/GID=$(id -g)/; s/^RCON_PASSWORD=.*/RCON_PASSWORD=$(openssl rand -hex 24)/" .env
+      - run: scripts/ci-env.sh
       - run: docker compose config -q
       - run: docker compose -f compose.yaml -f compose.staging.yaml config -q
 
@@ -53,10 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Create .env from the example
-        run: |
-          cp .env.example .env
-          sed -i "s/^UID=.*/UID=$(id -u)/; s/^GID=.*/GID=$(id -g)/; s/^RCON_PASSWORD=.*/RCON_PASSWORD=$(openssl rand -hex 24)/" .env
+      - run: scripts/ci-env.sh
       - name: Build the tools image
         run: docker compose --profile tools build
       - name: packwiz refresh must be a no-op
@@ -111,11 +105,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Create .env for a throwaway server
-        run: |
-          cp .env.example .env
-          sed -i "s/^UID=.*/UID=$(id -u)/; s/^GID=.*/GID=$(id -g)/; s/^MEMORY=.*/MEMORY=4G/; s/^PAUSE_IF_NO_PLAYERS=.*/PAUSE_IF_NO_PLAYERS=false/" .env
-          sed -i "s/^RCON_PASSWORD=.*/RCON_PASSWORD=$(openssl rand -hex 24)/" .env
+      - run: scripts/ci-env.sh MEMORY=4G PAUSE_IF_NO_PLAYERS=false
       - run: docker compose --profile tools build
       - run: scripts/pack-export.sh
       - run: scripts/smoke.sh

@@ -13,8 +13,6 @@ cd "$repo_root"
 
 service="backup"
 
-log() { printf '%s\n' "$*" >&2; }
-fail() { log "FAIL: $*"; exit 1; }
 
 cid="$(docker compose ps -q "$service")"
 [ -n "$cid" ] || fail "no container for service $service; is the stack up?"

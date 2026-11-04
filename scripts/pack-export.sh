@@ -22,11 +22,7 @@ if [ "${GITHUB_REF_TYPE:-}" = "tag" ] || [ -n "${PACK_REQUIRE_REAL_HOST:-}" ]; t
   fi
 fi
 
-version="$(sed -n 's/^version = "\(.*\)"$/\1/p' pack/pack.toml)"
-if [ -z "$version" ]; then
-  echo "pack/pack.toml has no version field" >&2
-  exit 1
-fi
+version="$(pack_version)"
 
 mkdir -p .build dist
 # A fresh path on every run: Docker Desktop may serve stale contents for a
