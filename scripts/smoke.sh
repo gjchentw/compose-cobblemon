@@ -45,10 +45,12 @@ status="$(docker compose exec -T "$service" mc-monitor status --host localhost -
 log "$status"
 printf '%s' "$status" | grep -c 'version=1\.21\.1' >/dev/null || fail "status does not report version 1.21.1"
 
-# The game writes one log per boot, so latest.log is bounded and cannot be
-# confused with earlier boots of the same container.
-log "== current boot log (/data/logs/latest.log)"
-bootlog="$(docker compose exec -T "$service" cat /data/logs/latest.log)"
+# Only this boot's output: the container log since its last start. latest.log
+# is not used because log4j rolls it over at midnight, which would hide the
+# startup lines of a server that booted the day before.
+log "== current boot log (container output since start)"
+started="$(docker inspect -f '{{.State.StartedAt}}' "$(docker compose ps -q "$service")")"
+bootlog="$(docker compose logs --no-color --since "$started" "$service")"
 printf '%s' "$bootlog" | grep -c 'Done (' >/dev/null || fail "boot log has no 'Done (' line"
 printf '%s' "$bootlog" | grep -Ec -- "- cobblemon ${cobblemon_version//./\\.}" >/dev/null \
   || fail "Fabric did not list cobblemon $cobblemon_version in its mod table"
