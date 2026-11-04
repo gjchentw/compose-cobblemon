@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# L3 smoke test: start the stack, wait for the server to become healthy,
-# then check the version, the current boot's log, the server-side mod set
-# and RCON exposure.
+# L3 smoke test: check the deployment contract before starting (pack version
+# in .env matches pack/, the mrpack exists), start the stack, wait for the
+# server to become healthy, then check the version and MOTD, the current
+# boot's log, the exact server-side mod set, the JVM, the security
+# properties, the backup sidecar, the published port and RCON exposure.
 #
 # Usage: scripts/smoke.sh
 # Env:   SMOKE_TIMEOUT  seconds to wait for healthy (default 600)
@@ -17,20 +19,23 @@ cd "$repo_root"
 timeout="${SMOKE_TIMEOUT:-600}"
 service="cobblemon"
 
+[ -n "$(env_value RCON_PASSWORD)" ] || fail "RCON_PASSWORD is empty; set a real one in .env"
 
-rcon_password="$(env_value RCON_PASSWORD)"
-if [ -z "$rcon_password" ] || [ "$rcon_password" = "replace-with-a-long-random-password" ]; then
-  fail "RCON_PASSWORD is empty or still the placeholder; set a real one in .env"
-fi
-
-# The pinned Cobblemon version and the client-only jar list come from pack/,
-# the source of truth, so this test cannot drift from the pack.
+# Everything the test expects comes from pack/ (the source of truth) and
+# .env, so it cannot drift from the pack and catches a stack that runs a
+# different pack version than the repository describes.
+pack_v="$(pack_version)"
+env_v="$(env_value PACK_VERSION)"
+[ "$env_v" = "$pack_v" ] || fail "PACK_VERSION=$env_v in .env but pack/pack.toml is $pack_v"
+[ -f "dist/cobblemon-$env_v.mrpack" ] || fail "dist/cobblemon-$env_v.mrpack is missing; run scripts/pack-export.sh"
+minecraft="$(sed -n 's/^minecraft = "\(.*\)"$/\1/p' pack/pack.toml)"
 cobblemon_version="$(sed -n 's/^filename = "Cobblemon-fabric-\(.*\)+.*"$/\1/p' pack/mods/cobblemon.pw.toml)"
-[ -n "$cobblemon_version" ] || fail "cannot read the Cobblemon version from pack/mods/cobblemon.pw.toml"
-client_only=""
+[ -n "$minecraft" ] && [ -n "$cobblemon_version" ] || fail "cannot read the Minecraft or Cobblemon version from pack/"
+server_jars=""
 for f in pack/mods/*.pw.toml; do
-  if grep -q '^side = "client"$' "$f"; then
-    client_only="$client_only $(sed -n 's/^filename = "\(.*\)"$/\1/p' "$f")"
+  if grep -Eq '^side = "(both|server)"$' "$f"; then
+    server_jars="$server_jars$(sed -n 's/^filename = "\(.*\)"$/\1/p' "$f")
+"
   fi
 done
 
@@ -43,7 +48,8 @@ wait_healthy "$service" "$timeout" || fail "server did not become healthy"
 log "== status query"
 status="$(docker compose exec -T "$service" mc-monitor status --host localhost --port 25565)"
 log "$status"
-printf '%s' "$status" | grep -c 'version=1\.21\.1' >/dev/null || fail "status does not report version 1.21.1"
+printf '%s' "$status" | grep -Fc "version=$minecraft" >/dev/null || fail "status does not report version $minecraft"
+printf '%s' "$status" | grep -Fc "Pack $env_v" >/dev/null || fail "MOTD does not announce Pack $env_v"
 
 # Only this boot's output: the container log since its last start. latest.log
 # is not used because log4j rolls it over at midnight, which would hide the
@@ -56,18 +62,25 @@ printf '%s' "$bootlog" | grep -Ec -- "- cobblemon ${cobblemon_version//./\\.}" >
   || fail "Fabric did not list cobblemon $cobblemon_version in its mod table"
 log "Fabric loaded cobblemon $cobblemon_version"
 
-log "== server-side mod set"
-mods="$(docker compose exec -T "$service" sh -c 'ls /data/mods')"
+log "== server-side mod set must be exactly the pack's server-side files"
+mods="$(docker compose exec -T "$service" sh -c 'ls /data/mods' | tr -d '\r')"
 log "$mods"
-for jar in $client_only; do
-  if printf '%s\n' "$mods" | grep -Fxc "$jar" >/dev/null; then
-    fail "client-only mod installed on the server: $jar"
-  fi
-done
-printf '%s\n' "$mods" | grep -Fxc "Cobblemon-fabric-${cobblemon_version}+1.21.1.jar" >/dev/null \
-  || fail "Cobblemon-fabric-${cobblemon_version}+1.21.1.jar missing from /data/mods"
+if ! diff <(printf '%s' "$server_jars" | sort) <(printf '%s\n' "$mods" | sort) >&2; then
+  fail "/data/mods differs from the server-side set in pack/mods (see diff above)"
+fi
 
-log "== RCON must not be published"
+log "== JVM, security properties, backup sidecar"
+docker compose exec -T "$service" java -version 2>&1 | grep -c 'version "21\.' >/dev/null || fail "server JVM is not Java 21"
+props="$(docker compose exec -T "$service" grep -Ec '^(online-mode|white-list|enforce-whitelist)=true$' /data/server.properties | tr -d '\r')"
+[ "$props" = "3" ] || fail "online-mode, white-list and enforce-whitelist must all be true in server.properties (found $props)"
+[ -n "$(docker compose ps -q --status running backup)" ] || fail "backup sidecar is not running"
+
+log "== published port reachable from the host, RCON not published"
+mapping="$(docker compose port "$service" 25565 | head -n 1)"
+port="${mapping##*:}"
+[ -n "$port" ] || fail "port 25565 is not published"
+(exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null || fail "nothing accepts connections on 127.0.0.1:$port"
+log "tcp connect to 127.0.0.1:$port ok"
 if [ -n "$(docker compose port "$service" 25575 2>/dev/null)" ]; then
   fail "RCON port 25575 is published on the host"
 fi

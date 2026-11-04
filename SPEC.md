@@ -47,7 +47,7 @@ All versions below were verified on 2026-11-03 against the sources listed at the
 
 | Component | Pinned value | Notes |
 |---|---|---|
-| Docker Engine | 24+ with Compose v2 (`docker compose`) | Host needs only Docker and bash; all tooling runs in containers |
+| Docker Engine | 24+ with Compose 2.24+ (`docker compose`; the staging override uses `!override`) | Host needs only Docker and bash; all tooling runs in containers |
 | Server image | `itzg/minecraft-server:2026.10.1-java21` | Pinned by tag and digest in `compose.yaml`. `latest` is Java 25 now; Minecraft 1.21.1 targets Java 21 |
 | Backup image | `itzg/mc-backup`, dated tag chosen in Plan | Official companion image; RCON-coordinated `save-off`/`save-on` |
 | Minecraft | 1.21.1 | |

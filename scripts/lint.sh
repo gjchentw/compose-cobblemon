@@ -120,6 +120,8 @@ GOOD
 set -euo pipefail
 echo "ok"
 GOOD
+  printf 'print("ok")\n' > "$good/ok.py"
+  printf 'def (:\n' > "$bad/bad.py"
   mkdir -p "$good/.github/workflows" "$bad/.github/workflows"
   cat > "$good/.github/workflows/ok.yml" <<'GOOD'
 on: push
@@ -160,7 +162,7 @@ BAD
 
   log "-- self-test: each linter must report the expected rule"
   local n=0
-  for pair in "Dockerfile:DL3006" "dup.yaml:key-duplicates" "unquoted.sh:SC2086" ".github/workflows/bad.yml:runs-on"; do
+  for pair in "Dockerfile:DL3006" "dup.yaml:key-duplicates" "unquoted.sh:SC2086" ".github/workflows/bad.yml:runs-on" "bad.py:SyntaxError"; do
     local file="${pair%%:*}" rule="${pair#*:}" case_dir
     # One directory per case: Docker Desktop may serve stale contents for a
     # path that was deleted and recreated while the daemon still has it cached.

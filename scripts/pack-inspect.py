@@ -18,11 +18,12 @@ options.txt (identical to the committed file) and servers.dat (carrying the
 name and host it was generated from). Standard library only.
 """
 import argparse
+import importlib.util
+import json
 import pathlib
 import sys
 import tomllib
 import zipfile
-import json
 from urllib.parse import urlparse
 
 SIDES = {
@@ -50,7 +51,17 @@ ENV = {
     "server": ("unsupported", "required"),
 }
 ALLOWED_OVERRIDES = {"overrides/options.txt", "overrides/servers.dat"}
+ALLOWED_MEMBERS = ALLOWED_OVERRIDES | {"modrinth.index.json"}
 DOWNLOAD_HOST = "cdn.modrinth.com"
+
+
+def nbt_reader():
+    """The Reader class from make-servers-dat.py, loaded by path (hyphenated filename)."""
+    path = pathlib.Path(__file__).with_name("make-servers-dat.py")
+    spec = importlib.util.spec_from_file_location("make_servers_dat", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.Reader
 
 
 def read_pack(pack_dir):
@@ -72,8 +83,11 @@ def main(args):
     pack_dir = pathlib.Path(args.pack)
     pack, mods = read_pack(pack_dir)
     with zipfile.ZipFile(args.file) as z:
+        members = {n for n in z.namelist() if not n.endswith("/")}
+        check(members == ALLOWED_MEMBERS,
+              f"archive members {sorted(members)} != expected {sorted(ALLOWED_MEMBERS)}")
         index = json.loads(z.read("modrinth.index.json"))
-        overrides = {n: z.read(n) for n in z.namelist() if n.startswith("overrides/") and not n.endswith("/")}
+        overrides = {n: z.read(n) for n in members if n.startswith("overrides/")}
 
     # pack metadata and pins
     check(index.get("formatVersion") == 1, "formatVersion is not 1")
@@ -129,8 +143,15 @@ def main(args):
     check(overrides.get("overrides/options.txt") == expected_options,
           "overrides/options.txt differs from the committed pack/options.txt")
     servers = overrides.get("overrides/servers.dat", b"")
-    check(args.name.encode("utf-8") in servers, f"servers.dat does not contain name {args.name!r}")
-    check(args.host.encode("utf-8") in servers, f"servers.dat does not contain host {args.host!r}")
+    try:
+        entries = nbt_reader()(servers).root().get("servers", [])
+    except Exception as exc:  # any parse failure is a finding
+        entries = []
+        failures.append(f"servers.dat does not parse as NBT: {exc}")
+    check(len(entries) == 1, f"servers.dat holds {len(entries)} entries, expected 1")
+    if entries:
+        check(entries[0].get("name") == args.name, f"servers.dat name {entries[0].get('name')!r} != {args.name!r}")
+        check(entries[0].get("ip") == args.host, f"servers.dat ip {entries[0].get('ip')!r} != {args.host!r}")
 
     print(f"{args.file}: version {index.get('versionId')}, minecraft {deps.get('minecraft')}, "
           f"fabric-loader {deps.get('fabric-loader')}, {len(files)} files, {len(overrides)} overrides")

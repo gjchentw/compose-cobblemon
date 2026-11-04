@@ -7,6 +7,8 @@ log() { printf '%s\n' "$*" >&2; }
 fail() { log "FAIL: $*"; exit 1; }
 
 # pack_version: the version field of pack/pack.toml (the release version).
+# Use as `v="$(pack_version)"`: the fail inside the substitution aborts the
+# caller through the assignment's exit status under set -e.
 pack_version() {
   local v
   v="$(sed -n 's/^version = "\(.*\)"$/\1/p' pack/pack.toml)"
@@ -16,6 +18,7 @@ pack_version() {
 
 # env_value KEY
 # Prints KEY from the environment, else from .env, else from .env.example.
+# Not for UID or GID: bash's own read-only UID always wins; use id -u / id -g.
 # The value is everything after the first '=', with one pair of surrounding
 # quotes removed, which matches how docker compose reads .env files.
 env_value() {

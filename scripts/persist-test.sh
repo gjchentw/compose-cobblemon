@@ -22,7 +22,7 @@ cd "$repo_root"
 
 timeout="${SMOKE_TIMEOUT:-600}"
 service="cobblemon"
-marker="persisttest"
+marker="pt$(date +%s)"   # unique per run, so it cannot collide with a real objective
 
 rcon() { docker compose exec -T "$service" rcon-cli "$@"; }
 
@@ -33,15 +33,21 @@ fi
 # The grace period is read from the container, so this test cannot disagree with compose.yaml.
 grace="$(docker inspect -f '{{if .Config.StopTimeout}}{{.Config.StopTimeout}}{{else}}10{{end}}' "$cid")"
 
+# If anything fails after the stop, bring the stack back so a RED never leaves the server down.
+stopped=0
+ok=0
+trap 'if [ "$stopped" = 1 ] && [ "$ok" != 1 ]; then log "== bringing the stack back up after a failure"; docker compose --progress quiet up -d || true; fi' EXIT
+
 log "== marker: scoreboard objective $marker, then save-all flush"
-rcon scoreboard objectives remove "$marker" >/dev/null 2>&1 || true
-rcon scoreboard objectives add "$marker" dummy >/dev/null
+rcon scoreboard objectives add "$marker" dummy | grep -Fc "$marker" >/dev/null || fail "could not create scoreboard objective $marker"
 rcon save-all flush >/dev/null
-since="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+# Log lines are selected by the daemon's clock (container start time), not the host clock.
+started="$(docker inspect -f '{{.State.StartedAt}}' "$cid")"
 
 log "== docker compose stop (grace period ${grace}s)"
 start="$(date +%s)"
 docker compose --progress quiet stop
+stopped=1
 elapsed=$(( $(date +%s) - start ))
 log "stopped in ${elapsed}s"
 if [ "$elapsed" -ge "$grace" ]; then
@@ -51,7 +57,7 @@ fi
 log "== orderly-stop evidence"
 exit_code="$(docker inspect -f '{{.State.ExitCode}}' "$cid")"
 [ "$exit_code" = "0" ] || fail "container exit code is $exit_code, not 0 (137 means SIGKILL)"
-during="$(docker compose logs --no-color --since "$since" "$service")"
+during="$(docker compose logs --no-color --since "$started" "$service")"
 for evidence in 'gracefully stopping server' 'Stopping server' 'Saving worlds' 'All dimensions are saved' 'mc-server-runner.*Done'; do
   printf '%s' "$during" | grep -Ec "$evidence" >/dev/null || fail "no '$evidence' line in the log during the stop"
 done
@@ -63,9 +69,10 @@ wait_healthy "$service" "$timeout" || fail "server did not become healthy after 
 log "== state after the restart"
 objectives="$(rcon scoreboard objectives list)"
 log "$objectives"
-printf '%s' "$objectives" | grep -c "$marker" >/dev/null || fail "scoreboard objective $marker did not survive the restart"
+printf '%s' "$objectives" | grep -Fc "[$marker]" >/dev/null || fail "scoreboard objective $marker did not survive the restart"
 rcon scoreboard objectives remove "$marker" >/dev/null
 docker compose exec -T "$service" sh -c 'test -e /data/world/level.dat && test -e /data/whitelist.json && test -e /data/ops.json' \
   || fail "world/level.dat, whitelist.json or ops.json missing after the restart"
 
+ok=1
 log "PERSIST OK"
