@@ -20,10 +20,13 @@ concurrency:
 
 env:
   # Baked into the client pack's server list at export time. Set them as
-  # repository variables (Settings > Secrets and variables > Actions > Variables).
-  # When unset, scripts/lib.sh falls back to the placeholders in .env.example.
-  SERVER_NAME: ${{ vars.SERVER_NAME }}
-  SERVER_PUBLIC_HOST: ${{ vars.SERVER_PUBLIC_HOST }}
+  # repository secrets (Settings > Secrets and variables > Actions > Secrets),
+  # so a repository created from this template builds its own pack. When
+  # unset (branch builds without secrets, pull requests from forks),
+  # scripts/lib.sh falls back to the placeholders in .env.example; tag builds
+  # refuse the placeholder.
+  SERVER_NAME: ${{ secrets.SERVER_NAME }}
+  SERVER_PUBLIC_HOST: ${{ secrets.SERVER_PUBLIC_HOST }}
 
 jobs:
   lint:

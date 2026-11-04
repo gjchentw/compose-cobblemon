@@ -13,7 +13,7 @@
 
 ## 1. 下載 pack
 
-打開 [Releases 頁面](https://github.com/gjchentw/compose-cobblemon/releases/latest)，下載名為 `cobblemon-X.Y.Z.mrpack` 的檔案（X.Y.Z 是 pack 版本）。
+打開 [Releases 頁面](../../releases/latest)，下載名為 `cobblemon-X.Y.Z.mrpack` 的檔案（X.Y.Z 是 pack 版本）。
 
 ## 2. 安裝 pack
 

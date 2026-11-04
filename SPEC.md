@@ -303,6 +303,7 @@ Resolved with the human on 2026-11-03, one question at a time. Non-obvious ones 
 | 6 | CI | GitHub Actions: L1 and L2 on push and PR, release on tag, L3 by manual dispatch |
 | 7 | Player guide language | English primary, plus `docs/player-guide.zh-TW.md` as an explicit exception recorded in `AGENTS.md` |
 | 8 | Backup cadence | One full tar archive every 24 hours, pause when no players are online, prune after 14 days, pre-upgrade archives kept in `backups/keep/` |
+| 9 | Server name and host for CI builds (2026-11-04) | GitHub repository secrets `SERVER_NAME` and `SERVER_PUBLIC_HOST`; the repository is a GitHub template so others create their own copy, set their own secrets and build their own pack |
 
 No open questions remain.
 

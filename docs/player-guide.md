@@ -14,7 +14,7 @@ Fabric API or any mod by hand: the pack carries everything.
 
 ## 1. Download the pack
 
-Open the [Releases page](https://github.com/gjchentw/compose-cobblemon/releases/latest)
+Open the [Releases page](../../releases/latest)
 and download the file named `cobblemon-X.Y.Z.mrpack` (X.Y.Z is the pack version).
 
 ## 2. Install the pack

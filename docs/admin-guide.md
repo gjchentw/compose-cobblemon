@@ -5,8 +5,9 @@ root on the Docker host. The host needs Docker 24+ with Compose 2.24+ and bash.
 
 ## First deployment
 
-1. Clone the repository and check out the release tag you are deploying:
-   `git clone https://github.com/gjchentw/compose-cobblemon.git && cd compose-cobblemon && git checkout v1.0.0`
+1. Clone your repository (created from the template, see README "Make it yours") and
+   check out the release tag you are deploying:
+   `git clone https://github.com/<you>/<your-repo>.git && cd <your-repo> && git checkout v1.0.0`
 2. `cp .env.example .env` and edit `.env`:
    - `RCON_PASSWORD`: `openssl rand -base64 32`
    - `SERVER_NAME`, `SERVER_PUBLIC_HOST`: what players will see and connect to
@@ -14,7 +15,7 @@ root on the Docker host. The host needs Docker 24+ with Compose 2.24+ and bash.
    - `UID` and `GID`: the output of `id -u` and `id -g`
 3. `mkdir -p data backups/keep dist` so the directories belong to you, not to root.
 4. Put the pack in `dist/`. Either download `cobblemon-<version>.mrpack` from the
-   [Releases page](https://github.com/gjchentw/compose-cobblemon/releases) into `dist/`,
+   [Releases page](../../releases) into `dist/`,
    or build it locally with `scripts/pack-export.sh` (builds the tools image first).
 5. `docker compose up -d`, then `scripts/smoke.sh`. The first start downloads the
    server-side mods and takes a few minutes; the smoke test waits up to 10 minutes.

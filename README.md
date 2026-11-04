@@ -2,7 +2,8 @@
 
 A Cobblemon (Minecraft 1.21.1, Fabric) server and its matching client pack, shipped as
 one versioned release. Admins run everything with `docker compose`; players install one
-`.mrpack` and press Play.
+`.mrpack` and press Play. This repository is a GitHub template: create your own copy,
+set two secrets, tag a release, and CI builds the pack for your server.
 
 - Players: read [docs/player-guide.md](docs/player-guide.md)
   (Traditional Chinese: [docs/player-guide.zh-TW.md](docs/player-guide.zh-TW.md)).
@@ -25,13 +26,24 @@ pack/  ──export──▶  dist/cobblemon-X.Y.Z.mrpack  ──▶  players (M
                                                  └──▶  backup sidecar  ──▶  ./backups
 ```
 
+## Make it yours (GitHub)
+
+1. Click **Use this template** and create your repository.
+2. In your repository go to **Settings > Secrets and variables > Actions > Secrets** and add
+   `SERVER_PUBLIC_HOST` (the address players connect to, for example `mc.example.org`) and
+   `SERVER_NAME` (what players see in their server list). Tag builds refuse to publish a pack
+   without them.
+3. Optional: replace `config/server-icon.png`, and change `name` and `author` in `pack/pack.toml`.
+4. Cut a release from your clone with `scripts/release.sh X.Y.Z` and push the tag. CI attaches
+   `cobblemon-X.Y.Z.mrpack` to a GitHub Release; send players the link.
+
 ## Quick start (Docker host)
 
 Requirements: Linux with Docker 24+ and Compose 2.24+ (the staging override uses `!override`), bash, 12 GB RAM for the default 6 GB heap.
 
 ```bash
-git clone https://github.com/gjchentw/compose-cobblemon.git
-cd compose-cobblemon
+git clone https://github.com/<you>/<your-repo>.git   # your copy of this template
+cd <your-repo>
 cp .env.example .env
 # edit .env: RCON_PASSWORD (openssl rand -base64 32), SERVER_NAME, SERVER_PUBLIC_HOST,
 #            MEMORY, and UID/GID from `id -u` / `id -g`

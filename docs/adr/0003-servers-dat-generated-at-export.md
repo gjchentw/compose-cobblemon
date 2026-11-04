@@ -15,13 +15,14 @@ real hostnames (placeholders only), and packwiz hashes every file in `pack/` int
 `servers.dat` there with `scripts/make-servers-dat.py` (standard-library NBT writer with a
 `--verify` reader), refreshes and exports from that directory. The name and host come from
 `SERVER_NAME` and `SERVER_PUBLIC_HOST` with the precedence environment variable, then
-`.env`, then `.env.example`. CI supplies them as repository variables.
+`.env`, then `.env.example`. CI supplies them as repository secrets, so every repository
+created from this template builds a pack pointing at its own server without touching git.
 
 ## Consequences
 
 - `pack/` stays placeholder-free and `packwiz refresh` on it is always a no-op.
-- The mrpack attached to a GitHub Release carries the real host only if the repository
-  variables are set; otherwise players add the server by hand (documented in the guide).
+- A tag build refuses to export with the placeholder host, so a GitHub Release can only
+  carry a real host; branch builds and fork pull requests still export with the placeholder.
 - Players update by installing a new profile from the new mrpack, so the launcher
   overwriting `servers.dat` on in-place updates is not a concern.
 - The export writes into `.build/` under the repository, not the system temp directory,
