@@ -8,9 +8,20 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
+# shellcheck source=scripts/lib.sh
+. "$repo_root/scripts/lib.sh"
+
+# Never clobber a real .env: GitHub Actions always sets CI=true.
+if [ -z "${CI:-}" ] && [ -e .env ]; then
+  fail "refusing to overwrite an existing .env outside CI"
+fi
 
 cp .env.example .env
 set_var() {
+  grep -q "^$1=" .env || fail "unknown .env key: $1"
+  case "$2" in
+    *[!A-Za-z0-9._:/-]*) fail "value for $1 contains characters outside [A-Za-z0-9._:/-]" ;;
+  esac
   sed -i.bak "s|^$1=.*|$1=$2|" .env && rm -f .env.bak
 }
 set_var UID "$(id -u)"

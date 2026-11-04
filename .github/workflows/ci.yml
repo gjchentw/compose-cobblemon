@@ -34,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false   # the repo is bind-mounted into tool containers
       - run: scripts/lint.sh
 
   validate:
@@ -41,6 +43,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false   # the repo is bind-mounted into tool containers
       - run: scripts/ci-env.sh
       - run: docker compose config -q
       - run: docker compose -f compose.yaml -f compose.staging.yaml config -q
@@ -50,6 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false   # the repo is bind-mounted into tool containers
       - run: scripts/ci-env.sh
       - name: Build the tools image
         run: docker compose --profile tools build
@@ -69,7 +75,7 @@ jobs:
 
   release:
     name: GitHub Release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: [lint, validate, pack]
     runs-on: ubuntu-latest
     permissions:
@@ -79,6 +85,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+          persist-credentials: false
       - name: Tag must match the pack version
         run: scripts/version-check.sh
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -105,7 +112,10 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false   # the repo is bind-mounted into tool containers
       - run: scripts/ci-env.sh MEMORY=4G PAUSE_IF_NO_PLAYERS=false
+      - run: mkdir -p data backups/keep dist && chmod 750 data backups   # as the admin guide says
       - run: docker compose --profile tools build
       - run: scripts/pack-export.sh
       - run: scripts/smoke.sh
