@@ -13,10 +13,12 @@ root on the Docker host. The host needs Docker 24+ with Compose 2.24+ and bash.
    - `SERVER_NAME`, `SERVER_PUBLIC_HOST`: what players will see and connect to
    - `MEMORY`: `6G` on a 12 GB host, `4G` on an 8 GB host
    - `UID` and `GID`: the output of `id -u` and `id -g`
-3. `mkdir -p data backups/keep dist` so the directories belong to you, not to root.
-4. Put the pack in `dist/`. Either download `cobblemon-<version>.mrpack` from the
-   [Releases page](../../releases) into `dist/`,
-   or build it locally with `scripts/pack-export.sh` (builds the tools image first).
+3. `mkdir -p data backups/keep dist && chmod 750 data backups` so the directories belong to
+   you, not to root, and other accounts on the host cannot read the world or the RCON password.
+4. Put the pack in `dist/`. Either download `cobblemon-<version>.mrpack` from your
+   repository's Releases page into `dist/`, or build it locally with `scripts/pack-export.sh`
+   (builds the tools image first). Send players the Release link; the player guide tells them
+   to expect it from you.
 5. `docker compose up -d`, then `scripts/smoke.sh`. The first start downloads the
    server-side mods and takes a few minutes; the smoke test waits up to 10 minutes.
 6. Open port 25565/tcp on the host firewall. Never open 25575 (RCON).
@@ -57,8 +59,14 @@ is the only way in, and that is intended.
 
 The `backup` sidecar takes a full archive of `data/` every `BACKUP_INTERVAL` (24h) while
 players have been online, and deletes archives older than `PRUNE_BACKUPS_DAYS` (14) from the
-top level of `backups/`. Before every upgrade, take one by hand and move it to `backups/keep/`.
-Run `scripts/restore-drill.sh` after every upgrade; it proves the newest archive restores.
+top level of `backups/`. Archives never contain `server.properties`, `.rcon-cli.env` or
+`.rcon-cli.yaml` (they hold the RCON password and the image regenerates them from `.env` on
+every start). Before every upgrade, take one by hand, move it to `backups/keep/` and prove it
+restores with `scripts/restore-drill.sh keep/<archive>`. Run `scripts/restore-drill.sh` after
+every upgrade too; it proves the newest archive restores.
+
+If `data/` or any archive was ever shared with someone else, rotate `RCON_PASSWORD` in `.env`
+and run `docker compose up -d` (both containers pick up the new value).
 
 ## Performance triage
 

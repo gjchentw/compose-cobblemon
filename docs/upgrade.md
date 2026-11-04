@@ -39,10 +39,11 @@ mrpack name, `PACK_VERSION` and MOTD all carry the same `X.Y.Z`.
 ## 3. Upgrade production (Docker host)
 
 1. Announce: `docker compose exec cobblemon rcon-cli say "Server upgrade in 10 minutes"`.
-2. Pre-upgrade backup, kept forever:
+2. Pre-upgrade backup, kept forever, and proven to restore:
    ```
    docker compose exec -e PAUSE_IF_NO_PLAYERS=false backup backup now
    mv "backups/$(ls -t backups | grep tar.gz | head -n 1)" backups/keep/
+   scripts/restore-drill.sh "keep/$(ls -t backups/keep | head -n 1)"
    ```
 3. `docker compose stop`
 4. `git checkout vX.Y.Z`, put `cobblemon-X.Y.Z.mrpack` in `dist/`, set `PACK_VERSION=X.Y.Z` in `.env`.

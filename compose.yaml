@@ -79,6 +79,9 @@ services:
       BACKUP_INTERVAL: "${BACKUP_INTERVAL:-24h}"
       PAUSE_IF_NO_PLAYERS: "${PAUSE_IF_NO_PLAYERS:-true}"
       PRUNE_BACKUPS_DAYS: "${PRUNE_BACKUPS_DAYS:-14}"
+      # The image default is "*.jar,cache,logs"; the three extra files hold the RCON password
+      # and are regenerated from .env on every start, so archives must not carry them.
+      EXCLUDES: "*.jar,cache,logs,.rcon-cli.env,.rcon-cli.yaml,server.properties"
       # Pruning only looks at the top level of /backups, so backups/keep/ is safe for pre-upgrade archives.
     volumes:
       - ./data:/data:ro

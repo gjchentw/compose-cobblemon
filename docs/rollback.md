@@ -31,15 +31,24 @@ What you need, all created by `docs/upgrade.md`:
    docker compose up -d && scripts/smoke.sh
    ```
 4. Only if the world itself is broken, restore it from the pre-upgrade archive
-   (the archive holds `world/`, `config/` and the admin files; mods are reinstalled from the pack):
+   (the archive holds `world/`, `config/` and the admin files; mods are reinstalled from the pack).
+   The archive is opened and checked first, the current world is moved aside, and only then
+   is the restored copy put in place, so a wrong archive name cannot cost you the live world:
    ```
    docker compose stop
-   docker compose run --rm --no-deps --entrypoint sh -v "$PWD/backups/keep:/keep:ro" cobblemon -c \
-     'rm -rf /data/world /data/config /tmp/r && mkdir -p /tmp/r && tar xzf /keep/ARCHIVE.tar.gz -C /tmp/r \
-      && cp -a /tmp/r/world /tmp/r/config /data/ && cp -a /tmp/r/*.json /data/'
+   docker compose run --rm --no-deps --entrypoint sh -v "$PWD/backups/keep:/keep:ro" cobblemon -c '
+     set -e
+     rm -rf /tmp/r && mkdir -p /tmp/r
+     tar xzf /keep/ARCHIVE.tar.gz -C /tmp/r
+     test -e /tmp/r/world/level.dat
+     rm -rf /data/world.pre-rollback /data/config.pre-rollback
+     mv /data/world /data/world.pre-rollback
+     [ ! -d /data/config ] || mv /data/config /data/config.pre-rollback
+     cp -a /tmp/r/world /data/ && [ ! -d /tmp/r/config ] || cp -a /tmp/r/config /data/
+     cp -a /tmp/r/*.json /data/'
    docker compose up -d && scripts/smoke.sh
    ```
-   The archive is extracted to a scratch directory first and only the world, config
-   and admin files are copied back; mods and loader files come from the pack on start.
+   After the smoke test passes and players confirm the world, delete the aside copies:
+   `docker compose exec cobblemon rm -rf /data/world.pre-rollback /data/config.pre-rollback`.
 5. Tell players to install the previous pack version from the Releases page and join again.
 6. Note the rollback and the reason in `docs/releases.md`, then open an issue for the failed release.

@@ -13,7 +13,7 @@
 
 ## 1. 下載 pack
 
-打開 [Releases 頁面](../../releases/latest)，下載名為 `cobblemon-X.Y.Z.mrpack` 的檔案（X.Y.Z 是 pack 版本）。
+管理員會把發布頁面的連結傳給你。打開它，下載名為 `cobblemon-X.Y.Z.mrpack` 的檔案（X.Y.Z 是 pack 版本）。
 
 ## 2. 安裝 pack
 
@@ -48,7 +48,7 @@
 
 當伺服器清單的 MOTD 顯示的 pack 版本（例如 `Pack 1.1.0`）和你安裝的不同，表示伺服器已升級：
 
-1. 從 Releases 頁面下載新的 `.mrpack`。
+1. 從管理員傳來的連結下載新的 `.mrpack`。
 2. 照步驟 2 再裝成一個新的 profile。
 3. 從新的 profile 進遊戲。什麼都不會遺失：你的寶可夢、物品和進度都在伺服器上。
 

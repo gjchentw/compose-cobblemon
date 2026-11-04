@@ -14,8 +14,8 @@ Fabric API or any mod by hand: the pack carries everything.
 
 ## 1. Download the pack
 
-Open the [Releases page](../../releases/latest)
-and download the file named `cobblemon-X.Y.Z.mrpack` (X.Y.Z is the pack version).
+Your admin sends you a link to the release page. Open it and download the file named
+`cobblemon-X.Y.Z.mrpack` (X.Y.Z is the pack version).
 
 ## 2. Install the pack
 
@@ -50,7 +50,7 @@ If the server is not in your list, click **Add Server** and enter the address th
 
 When the server list shows a pack version in the MOTD (for example `Pack 1.1.0`) that differs from the one you installed, the server has been upgraded:
 
-1. Download the new `.mrpack` from the Releases page.
+1. Download the new `.mrpack` from the link your admin sends.
 2. Install it as a new profile, exactly as in step 2.
 3. Play from the new profile. Nothing is lost: your Pokémon, items and progress live on the server.
 

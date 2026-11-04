@@ -14,7 +14,6 @@ cd "$repo_root"
 # shellcheck source=scripts/lib.sh
 . "$repo_root/scripts/lib.sh"
 
-
 staging_files="compose.yaml:compose.staging.yaml"
 if [ -n "$(COMPOSE_FILE="$staging_files" docker compose ps -q --status running cobblemon 2>/dev/null)" ]; then
   fail "the staging server is running; stop it first: COMPOSE_FILE=$staging_files docker compose down"
@@ -42,7 +41,8 @@ if [ -n "$prod_running" ]; then
 fi
 
 log "== copying world, config and admin files into staging/data"
-# Run the copy in a container as root so file ownership is preserved on Linux hosts.
+# The copy runs in the backup service's container as the host user (user: in compose.yaml),
+# the same ids the server chowns /data to, so ownership stays consistent on Linux hosts.
 COMPOSE_FILE=compose.yaml docker compose --progress quiet run --rm --no-deps -T --entrypoint sh \
   -v "$repo_root/staging/data:/staging" backup -c '
     set -e

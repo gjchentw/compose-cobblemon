@@ -47,7 +47,7 @@ cd <your-repo>
 cp .env.example .env
 # edit .env: RCON_PASSWORD (openssl rand -base64 32), SERVER_NAME, SERVER_PUBLIC_HOST,
 #            MEMORY, and UID/GID from `id -u` / `id -g`
-mkdir -p data backups/keep dist # create them yourself so Docker does not create them as root
+mkdir -p data backups/keep dist && chmod 750 data backups   # yours, not root's; private
 scripts/pack-export.sh          # or download the release mrpack into dist/
 docker compose up -d
 scripts/smoke.sh                # waits for healthy, checks version, mods and RCON exposure
