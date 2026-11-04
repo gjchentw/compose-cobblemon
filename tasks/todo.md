@@ -91,4 +91,4 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/version-check.sh`; `scripts/smoke.sh && scripts/persist-test.sh && scripts/restore-drill.sh` on production
   - Files: `docs/acceptance-checklist.md`, `docs/releases.md`, `pack/pack.toml`, `.env.example`
 
-- [ ] Checkpoint D: all success criteria met; run `/agent-skills:review`, `/agent-skills:code-simplify`, `/agent-skills:ship` before merging to `main`
+- [x] Checkpoint D (2026-11-04): review, code-simplify and ship done; ship findings fixed; L3/L4 green on a Linux runner (run 41774973583). Remaining: Task 15 by the human, then tag v1.0.0

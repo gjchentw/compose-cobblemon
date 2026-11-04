@@ -68,6 +68,11 @@ every upgrade too; it proves the newest archive restores.
 If `data/` or any archive was ever shared with someone else, rotate `RCON_PASSWORD` in `.env`
 and run `docker compose up -d` (both containers pick up the new value).
 
+A scheduled backup may log `tar: .: file changed as we read it` followed by
+`ERROR Backup failed with exit code 1`. The archive is still written and complete (tar exit
+code 1 means a file changed during the read, which is expected on a live world); on Docker
+Desktop it happens on every run. Check with `scripts/restore-drill.sh` if in doubt.
+
 ## Performance triage
 
 Watch TPS and MSPT first (`docker compose exec cobblemon rcon-cli tps` is not vanilla; use
