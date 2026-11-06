@@ -32,8 +32,8 @@ pack/  ──export──▶  dist/cobblemon-X.Y.Z.mrpack  ──▶  players (M
 1. Click **Use this template** and create your repository.
 2. In your repository go to **Settings > Secrets and variables > Actions > Secrets** and add
    `SERVER_PUBLIC_HOST` (the address players connect to, for example `mc.example.org`) and
-   `SERVER_NAME` (what players see in their server list). Release builds refuse to publish a
-   pack without them.
+   `SERVER_NAME` (what players see in their server list). A release build refuses to publish a
+   pack without `SERVER_PUBLIC_HOST`; without `SERVER_NAME` the entry is called "Cobblemon Server".
 3. Optional: replace `config/server-icon.png` and change `name` and `author` in `pack/pack.toml`
    (both can be edited in the GitHub web editor).
 4. Publish a release: **Releases > Draft a new release**, type a new tag such as `v1.0.0` in
@@ -44,8 +44,9 @@ pack/  ──export──▶  dist/cobblemon-X.Y.Z.mrpack  ──▶  players (M
    release and adds a pack contents table to its notes. Send players the release link.
 
 The tag is the version: it must be `vX.Y.Z` or `vX.Y.Z-rc.N`, and nothing in git has to be
-edited to release. If the build fails, open the run under **Actions**; the usual cause is a
-missing secret or a tag in another format. After fixing it, re-run the failed job.
+edited to release. If the build fails, open the run under **Actions**. For a missing secret,
+add it and re-run the failed jobs. For a tag in another format, delete the release and its
+tag, then publish again with a valid tag.
 
 ## Quick start (Docker host)
 
@@ -59,7 +60,8 @@ cp .env.example .env
 # edit .env: PACK_VERSION=1.0.0 (the tag without the "v"), RCON_PASSWORD (openssl rand -base64 32),
 #            SERVER_NAME, SERVER_PUBLIC_HOST, MEMORY, and UID/GID from `id -u` / `id -g`
 mkdir -p data backups/keep dist && chmod 750 data backups   # yours, not root's; private
-# download cobblemon-1.0.0.mrpack from the release page into dist/
+curl -fL -o dist/cobblemon-1.0.0.mrpack \
+  https://github.com/<you>/<your-repo>/releases/download/v1.0.0/cobblemon-1.0.0.mrpack
 docker compose up -d
 scripts/smoke.sh                # waits for healthy; checks version, pack, mods, RCON exposure
 ```
@@ -90,8 +92,9 @@ The git tag is the only place a release version is written. One release is one t
 one `cobblemon-X.Y.Z.mrpack` (file name and the version inside the pack), one `PACK_VERSION`
 in the host's `.env` and the MOTD `... | Pack X.Y.Z`. In git, `pack/pack.toml` and
 `.env.example` always read `0.0.0-dev`; CI substitutes the tag's version when it builds the
-pack for a published release. `scripts/smoke.sh` checks the running server against this
-contract. Release history is the repository's Releases page.
+pack for a published release. `scripts/smoke.sh` checks a deployment against this contract:
+the checkout carries the tag, the pack file is that version inside, and the MOTD announces
+it. Release history is the repository's Releases page.
 
 ## Repository layout
 

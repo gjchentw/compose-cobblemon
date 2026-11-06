@@ -15,7 +15,7 @@ Ship a Cobblemon Minecraft server **and** the matching client pack as one versio
 User stories:
 
 1. As an admin, I clone this repo on a fresh Linux host with Docker, fill in `.env`, run `docker compose up -d`, and have a healthy whitelisted server within 10 minutes.
-2. As an admin, I run one command to produce `cobblemon-<version>.mrpack` and publish it to players.
+2. As an admin, I publish a release on GitHub and CI produces `cobblemon-<version>.mrpack` for players.
 3. As an admin, I test a new Cobblemon release on a staging stack with a copy of the production world before touching production, and I can roll back if it fails.
 4. As a player, I install the pack, press Play, select "Cobblemon Server" in Multiplayer, and join with no further setup.
 5. As a player, when a new pack version is announced I update it in my launcher and join again; the server MOTD tells me which version is expected.
@@ -224,9 +224,9 @@ These are requirements the repository must satisfy; the detailed procedures live
 
 **Upgrade SOP** (`docs/upgrade.md`), condensed from the plan:
 
-1. Bump versions in `pack/pack.toml` and mod files, export a beta pack `X.Y.Z-beta.N`.
-2. Copy the production world into `staging/data`, start staging with the beta pack.
-3. Join staging with the beta client pack; run the L5 checklist; read the startup log.
+1. Bump what changes in `pack/` or `compose.yaml`, merge, and publish a pre-release `vX.Y.Z-rc.N` on GitHub; CI builds the candidate pack.
+2. Copy the production world into `staging/data`, start staging with the candidate pack.
+3. Join staging with the candidate client pack; run the L5 checklist; read the startup log.
 4. Take a pre-upgrade backup of production and move it to `backups/keep/`.
 5. Publish the final GitHub release `vX.Y.Z`; CI attaches the mrpack.
 6. Stop production, check out the tag, set `.env` `PACK_VERSION=X.Y.Z`, place the mrpack in `dist/`, start, run L3 and L4, notify players with the exact version string.
@@ -265,7 +265,7 @@ Production never tracks `latest` of Cobblemon, Fabric loader, the image, or any 
 - Use `latest`, `stable` or any floating tag.
 - Publish the RCON port or set `ONLINE_MODE=false`.
 - Hand-edit packwiz-generated files, other than `pack.toml` and a mod's `side` field followed by `packwiz refresh`.
-- Ship a release whose git tag, `pack.toml` version, mrpack name and MOTD disagree.
+- Ship a release whose git tag, mrpack file name and internal version id, `PACK_VERSION` and MOTD disagree, or commit a release version to `pack/pack.toml` or `.env.example`.
 - Remove or weaken a check to make it pass.
 
 ## Success Criteria
@@ -278,7 +278,7 @@ Production never tracks `latest` of Cobblemon, Fabric loader, the image, or any 
 4. L1 through L4 pass locally; the restore drill restores a backup with the world intact.
 5. The staging stack runs next to production on port 25566 with a copied world, and the L5 checklist passes on staging and on production.
 6. Runbooks exist and were followed at least once each: player guide (English and Traditional Chinese), admin guide, upgrade SOP, rollback SOP.
-7. CI runs L1 and L2 green on the release commit, and the tag workflow attaches `cobblemon-1.0.0.mrpack` to the GitHub Release.
+7. CI runs L1 and L2 green on the release commit, and the release workflow attaches `cobblemon-1.0.0.mrpack` to the published GitHub release.
 
 ## Assumptions
 
@@ -299,8 +299,8 @@ Resolved with the human on 2026-11-03, one question at a time. Non-obvious ones 
 | 2 | Cobblemon version for 1.0.0 | 1.8.4 |
 | 3 | Host RAM and heap | Host has at least 12 GB; `MEMORY=6G` default, `MEMORY=4G` documented for 8 GB hosts |
 | 4 | QoL mods in 1.0.0 | All of them: Mod Menu, EMI, Xaero's Minimap, Xaero's World Map, AppleSkin, Mouse Tweaks |
-| 5 | Pack distribution | GitHub Release of this repo; the tag workflow attaches the mrpack |
-| 6 | CI | GitHub Actions: L1 and L2 on push and PR, release on tag, L3 by manual dispatch |
+| 5 | Pack distribution | GitHub Release of this repo; CI attaches the mrpack (amended by decision 10: the published release, not a tag push, triggers the build) |
+| 6 | CI | GitHub Actions: L1 and L2 on push and PR, pack build on a published release (amended by decision 10), L3 by manual dispatch or a smoke/* branch |
 | 7 | Player guide language | English primary, plus `docs/player-guide.zh-TW.md` as an explicit exception recorded in `AGENTS.md` |
 | 8 | Backup cadence | One full tar archive every 24 hours, pause when no players are online, prune after 14 days, pre-upgrade archives kept in `backups/keep/` |
 | 9 | Server name and host for CI builds (2026-11-04) | GitHub repository secrets `SERVER_NAME` and `SERVER_PUBLIC_HOST`; the repository is a GitHub template so others create their own copy, set their own secrets and build their own pack |

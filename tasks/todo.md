@@ -98,7 +98,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
 - [x] Task 16: Tag-derived version in the scripts
   - Acceptance: `pack-export.sh 9.8.7` writes `dist/cobblemon-9.8.7.mrpack` with internal version 9.8.7 and leaves git clean; default is `0.0.0-dev`; RED cases for inspect, version-check and smoke recorded; `scripts/release.sh` deleted
   - Verify: `scripts/lint.sh && docker compose config -q`; `scripts/pack-export.sh && scripts/pack-inspect.sh && scripts/version-check.sh`; `scripts/smoke.sh`
-  - Files: `pack/pack.toml`, `.env.example`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/pack-inspect.py`, `scripts/version-check.sh`, `scripts/smoke.sh`, `scripts/release.sh` (deleted)
+  - Files: `pack/pack.toml`, `.env.example`, `scripts/lib.sh`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/pack-inspect.py`, `scripts/version-check.sh`, `scripts/smoke.sh`, `scripts/release.sh` (deleted)
 
 - [x] Task 17: CI builds the pack when a release is published
   - Acceptance: trigger is `release: published`, no job on a bare tag push; release job derives the version from the tag, requires the real host, uploads the mrpack to the existing release and appends the pack contents table; branch builds stay green
@@ -108,6 +108,6 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
 - [x] Task 18: Documentation for the release-from-GitHub flow
   - Acceptance: no document mentions `scripts/release.sh` or `docs/releases.md`; README "Make it yours" is enough to release without a clone; ADR 0004 written; `docs/releases.md` deleted; Task 15 wording updated
   - Verify: `scripts/lint.sh`; grep for the two removed names
-  - Files: `README.md`, `docs/admin-guide.md`, `docs/upgrade.md`, `docs/adr/0004-git-tag-is-the-release-version.md`, `docs/releases.md` (deleted), `tasks/todo.md`, `tasks/plan.md`
+  - Files: `README.md`, `docs/admin-guide.md`, `docs/upgrade.md`, `docs/rollback.md`, `docs/adr/0004-git-tag-is-the-release-version.md`, `docs/releases.md` (deleted), `tasks/todo.md`, `tasks/plan.md`
 
-- [x] Checkpoint E (2026-11-06): the human published `v1.0.0-rc.4` from the Releases page targeting this branch; run 42216618658 attached the mrpack with internal version 1.0.0-rc.4 and the real host and appended the pack contents table. Follow-up approved by the human: CI marks `-rc.N` releases as pre-releases (rc.4 itself was published without the flag). Remaining: review of the Phase 5 diff, then merge to `main`
+- [x] Checkpoint E (2026-11-06): the human published `v1.0.0-rc.4` from the Releases page targeting this branch; run 42216618658 attached the mrpack with internal version 1.0.0-rc.4 and the real host and appended the pack contents table. Follow-up approved by the human: CI marks `-rc.N` releases as pre-releases (rc.4 itself was published without the flag). Review of the Phase 5 diff done (0 Critical, 5 Important, 9 Suggestions); the human chose to fix all five Important items and the low-cost suggestions, including the smoke check that the checkout carries the release tag. Remaining: prove the pre-release job with one more candidate, then merge to `main`

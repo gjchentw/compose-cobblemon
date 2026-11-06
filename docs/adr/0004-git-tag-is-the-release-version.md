@@ -33,6 +33,13 @@ compares it with `PACK_VERSION`, so a renamed or mismatched file is caught on th
   Cobblemon and server image versions. `scripts/release.sh` and `docs/releases.md` were
   removed.
 - A tag pushed without a GitHub release builds nothing; the release is the trigger.
-- CI marks any `-rc.N` release as a pre-release, so a candidate cannot become "Latest" by a
-  forgotten checkbox.
+- The workflow that runs is the one in the tagged commit. A release created on a commit that
+  predates this change is not built by it.
+- CI marks any `-rc.N` release as a pre-release in a job of its own that does not wait for
+  the build, so a forgotten checkbox is corrected within about a minute even when the build
+  fails; until then GitHub may show the candidate as "Latest".
+- Re-running the release job rebuilds the pack and replaces the attached file.
+- With no version in git, nothing in the files says which release a checkout is.
+  `scripts/smoke.sh` therefore requires the tag `v$PACK_VERSION` to point at the checked-out
+  commit (it only warns when the clone does not know the tag yet).
 - Local builds use the placeholder unless a version is passed to `scripts/pack-export.sh`.
