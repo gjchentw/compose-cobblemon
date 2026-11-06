@@ -61,6 +61,8 @@ jobs:
         with:
           persist-credentials: false   # the repo is bind-mounted into tool containers
       - run: scripts/ci-env.sh
+      - name: Version contract (git holds only the placeholder; a release tag is well formed)
+        run: scripts/version-check.sh
       - name: Build the tools image
         run: docker compose --profile tools build
       - name: packwiz refresh must be a no-op
@@ -69,13 +71,36 @@ jobs:
           git diff --exit-code pack/
       - name: Export and inspect
         run: scripts/pack-export.sh && scripts/pack-inspect.sh
-      - name: Version contract
-        run: scripts/version-check.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: mrpack
           path: dist/*.mrpack
           if-no-files-found: error
+
+  prerelease:
+    # Runs first and on its own, so a candidate is flagged even when the build
+    # fails (for example because the secrets are not set yet).
+    name: Mark a release candidate as a pre-release
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The tag must be vX.Y.Z or vX.Y.Z-rc.N
+        run: scripts/version-check.sh "$TAG" >/dev/null
+      - name: A release candidate must not be "Latest"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          case "$TAG" in
+            *-rc.*) gh release edit "$TAG" --prerelease ;;
+          esac
 
   release:
     name: Build the pack for the published release
@@ -86,8 +111,6 @@ jobs:
       contents: write
     env:
       TAG: ${{ github.event.release.tag_name }}
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -95,7 +118,10 @@ jobs:
       - run: scripts/ci-env.sh
       - name: Version from the release tag (vX.Y.Z or vX.Y.Z-rc.N)
         id: version
-        run: echo "version=$(scripts/version-check.sh "$TAG")" >> "$GITHUB_OUTPUT"
+        run: |
+          # Two statements, so a rejected tag fails the step instead of writing an empty value.
+          version="$(scripts/version-check.sh "$TAG")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - name: Build the tools image
         run: docker compose --profile tools build
       - name: Export and inspect the pack for this version
@@ -108,16 +134,14 @@ jobs:
       - name: Attach the pack to the release
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: gh release upload "$TAG" "dist/cobblemon-$VERSION.mrpack" --clobber
-      - name: A release candidate is always a pre-release
-        run: |
-          # The publisher may forget the checkbox; an rc must never become "Latest".
-          case "$TAG" in
-            *-rc.*) gh release edit "$TAG" --prerelease ;;
-          esac
       - name: Add the pack contents to the release notes
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           body="$(gh release view "$TAG" --json body --jq .body)"
           case "$body" in *"<!-- pack-contents -->"*) echo "notes already carry the table"; exit 0 ;; esac
@@ -125,6 +149,10 @@ jobs:
           fabric="$(sed -n 's/^fabric = "\(.*\)"$/\1/p' pack/pack.toml)"
           cobblemon="$(sed -n 's/^filename = "Cobblemon-fabric-\(.*\)+.*"$/\1/p' pack/mods/cobblemon.pw.toml)"
           image="$(sed -n 's/^ *image: docker.io\/itzg\/minecraft-server:\([^@]*\)@.*$/\1/p' compose.yaml)"
+          if [ -z "$minecraft" ] || [ -z "$fabric" ] || [ -z "$cobblemon" ] || [ -z "$image" ]; then
+            echo "cannot read the pack contents from pack/ and compose.yaml" >&2
+            exit 1
+          fi
           {
             printf '%s\n\n' "$body"
             printf '<!-- pack-contents -->\n'

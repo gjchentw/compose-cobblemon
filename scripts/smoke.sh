@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# L3 smoke test: check the mrpack for PACK_VERSION exists, start the stack,
-# wait for the server to become healthy, then check the version and MOTD,
-# that the mounted pack really is the version .env names, the current boot's
-# log, the exact server-side mod set, the JVM, the security properties, the
-# backup sidecar, the published port and RCON exposure.
+# L3 smoke test. Before starting anything: PACK_VERSION is well formed, the
+# checked-out commit carries that release's tag, the mrpack for it exists and
+# really is that version inside. Then start the stack, wait for healthy, and
+# check the version and MOTD, the current boot's log, the exact server-side
+# mod set, the JVM, the security properties, the backup sidecar, the
+# published port and RCON exposure.
 #
 # Usage: scripts/smoke.sh
 # Env:   SMOKE_TIMEOUT  seconds to wait for healthy (default 600)
@@ -25,8 +26,18 @@ service="cobblemon"
 # commit (check out the release tag you deploy); the release version comes
 # from PACK_VERSION and is compared with the pack file itself further down.
 env_v="$(env_value PACK_VERSION)"
+if [ "$env_v" != "$PLACEHOLDER_VERSION" ] && ! is_release_version "$env_v"; then
+  fail "PACK_VERSION must be X.Y.Z or X.Y.Z-rc.N (the tag without the \"v\"), got: $env_v"
+fi
+check_release_checkout "$env_v" || fail "the checkout does not match PACK_VERSION"
 [ -f "dist/cobblemon-$env_v.mrpack" ] \
   || fail "dist/cobblemon-$env_v.mrpack is missing; download it from the release or run scripts/pack-export.sh"
+# The file name is only a claim; the version id inside the pack is the fact.
+# Read in a one-off container of the server image (it ships unzip and jq)
+# before the server starts, so a mislabeled pack is never installed.
+inside="$(docker compose --progress quiet run --rm --no-deps -T --entrypoint sh "$service" \
+  -c 'unzip -p "$1" modrinth.index.json | jq -r .versionId' sh "/packs/cobblemon-$env_v.mrpack" | tr -d '\r')"
+[ "$inside" = "$env_v" ] || fail "dist/cobblemon-$env_v.mrpack carries version ${inside:-nothing readable} inside, not $env_v"
 minecraft="$(sed -n 's/^minecraft = "\(.*\)"$/\1/p' pack/pack.toml)"
 cobblemon_version="$(sed -n 's/^filename = "Cobblemon-fabric-\(.*\)+.*"$/\1/p' pack/mods/cobblemon.pw.toml)"
 [ -n "$minecraft" ] && [ -n "$cobblemon_version" ] || fail "cannot read the Minecraft or Cobblemon version from pack/"
@@ -49,9 +60,6 @@ status="$(docker compose exec -T "$service" mc-monitor status --host localhost -
 log "$status"
 printf '%s' "$status" | grep -Fc "version=$minecraft" >/dev/null || fail "status does not report version $minecraft"
 printf '%s' "$status" | grep -Fc "Pack $env_v" >/dev/null || fail "MOTD does not announce Pack $env_v"
-# The file name is only a claim; the version id inside the pack is the fact.
-inside="$(docker compose exec -T "$service" sh -c "unzip -p /packs/cobblemon-$env_v.mrpack modrinth.index.json | jq -r .versionId" | tr -d '\r')"
-[ "$inside" = "$env_v" ] || fail "dist/cobblemon-$env_v.mrpack carries version $inside inside, not $env_v"
 
 # Only this boot's output: the container log since its last start. latest.log
 # is not used because log4j rolls it over at midnight, which would hide the

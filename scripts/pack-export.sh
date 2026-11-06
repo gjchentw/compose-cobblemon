@@ -26,6 +26,9 @@ if [ "${GITHUB_REF_TYPE:-}" = "tag" ] || [ -n "${PACK_REQUIRE_REAL_HOST:-}" ]; t
   fi
 fi
 
+if [ "$#" -ge 1 ] && [ -z "$1" ]; then
+  fail "empty version argument; pass X.Y.Z or omit it for the $PLACEHOLDER_VERSION placeholder"
+fi
 version="${1:-$(pack_version)}"
 if [ "$version" != "$PLACEHOLDER_VERSION" ] && ! is_release_version "$version"; then
   fail "version must be X.Y.Z or X.Y.Z-rc.N, got: $version"
@@ -38,7 +41,10 @@ build_dir="$(mktemp -d .build/pack.XXXXXX)"
 trap 'rm -rf "$build_dir"' EXIT
 cp -R pack/. "$build_dir/"
 # The release version exists only in this build copy; pack/ keeps the placeholder.
-sed -i.bak "s/^version = \".*\"$/version = \"$version\"/" "$build_dir/pack.toml" && rm -f "$build_dir/pack.toml.bak"
+sed -i.bak "s/^version = \".*\"$/version = \"$version\"/" "$build_dir/pack.toml"
+rm -f "$build_dir/pack.toml.bak"
+grep -q "^version = \"$version\"$" "$build_dir/pack.toml" \
+  || fail "could not set version $version in the build copy of pack.toml"
 
 out="dist/cobblemon-$version.mrpack"
 run() {
