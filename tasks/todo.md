@@ -100,7 +100,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh && docker compose config -q`; `scripts/pack-export.sh && scripts/pack-inspect.sh && scripts/version-check.sh`; `scripts/smoke.sh`
   - Files: `pack/pack.toml`, `.env.example`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/pack-inspect.py`, `scripts/version-check.sh`, `scripts/smoke.sh`, `scripts/release.sh` (deleted)
 
-- [ ] Task 17: CI builds the pack when a release is published
+- [x] Task 17: CI builds the pack when a release is published
   - Acceptance: trigger is `release: published`, no job on a bare tag push; release job derives the version from the tag, requires the real host, uploads the mrpack to the existing release and appends the pack contents table; branch builds stay green
   - Verify: `scripts/lint.sh`; GitHub Actions run on the branch push
   - Files: `.github/workflows/ci.yml`

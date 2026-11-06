@@ -1,14 +1,18 @@
-# CI for compose-cobblemon: L1 and L2 on every push and pull request, a GitHub
-# Release with the mrpack on every vX.Y.Z tag, L3/L4 on manual dispatch.
+# CI for compose-cobblemon: L1 and L2 on every push and pull request; when a
+# GitHub release is published, the pack is built for its tag and attached to
+# it; L3/L4 on manual dispatch or a smoke/* branch.
 # Actions are pinned by commit SHA; tool images are pinned inside the scripts.
 name: ci
 
 on:
   push:
     branches: ["**"]
-    tags: ["v*"]
   pull_request:
   workflow_dispatch:
+  # Publishing a release (web UI or `gh release create`) with a new tag vX.Y.Z
+  # is the whole release procedure: the tag is the version.
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -23,8 +27,8 @@ env:
   # repository secrets (Settings > Secrets and variables > Actions > Secrets),
   # so a repository created from this template builds its own pack. When
   # unset (branch builds without secrets, pull requests from forks),
-  # scripts/lib.sh falls back to the placeholders in .env.example; tag builds
-  # refuse the placeholder.
+  # scripts/lib.sh falls back to the placeholders in .env.example; release
+  # builds refuse the placeholder host.
   SERVER_NAME: ${{ secrets.SERVER_NAME }}
   SERVER_PUBLIC_HOST: ${{ secrets.SERVER_PUBLIC_HOST }}
 
@@ -74,36 +78,57 @@ jobs:
           if-no-files-found: error
 
   release:
-    name: GitHub Release
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    name: Build the pack for the published release
+    if: github.event_name == 'release'
     needs: [lint, validate, pack]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-          fetch-tags: true
-          persist-credentials: false
-      - name: Tag must match the pack version
-        run: scripts/version-check.sh
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: mrpack
-          path: dist
-      - name: Create the release with the mrpack attached
+          persist-credentials: false   # the repo is bind-mounted into tool containers
+      - run: scripts/ci-env.sh
+      - name: Version from the release tag (vX.Y.Z or vX.Y.Z-rc.N)
+        id: version
+        run: echo "version=$(scripts/version-check.sh "$TAG")" >> "$GITHUB_OUTPUT"
+      - name: Build the tools image
+        run: docker compose --profile tools build
+      - name: Export and inspect the pack for this version
         env:
-          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          PACK_REQUIRE_REAL_HOST: "1"
         run: |
-          mrpack="dist/cobblemon-${GITHUB_REF_NAME#v}.mrpack"
-          test -f "$mrpack" || { echo "missing $mrpack: the pack job did not export the tagged version" >&2; exit 1; }
-          notes="$(grep -F "| ${GITHUB_REF_NAME#v} |" docs/releases.md || true)"
-          prerelease=""
-          case "$GITHUB_REF_NAME" in *-*) prerelease="--prerelease" ;; esac
-          # shellcheck disable=SC2086  # $prerelease is either empty or one flag
-          gh release create "$GITHUB_REF_NAME" "$mrpack" $prerelease \
-            --title "$GITHUB_REF_NAME" --notes "${notes:-Release $GITHUB_REF_NAME}"
+          scripts/pack-export.sh "$VERSION"
+          scripts/pack-inspect.sh "dist/cobblemon-$VERSION.mrpack"
+      - name: Attach the pack to the release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release upload "$TAG" "dist/cobblemon-$VERSION.mrpack" --clobber
+      - name: Add the pack contents to the release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          body="$(gh release view "$TAG" --json body --jq .body)"
+          case "$body" in *"<!-- pack-contents -->"*) echo "notes already carry the table"; exit 0 ;; esac
+          minecraft="$(sed -n 's/^minecraft = "\(.*\)"$/\1/p' pack/pack.toml)"
+          fabric="$(sed -n 's/^fabric = "\(.*\)"$/\1/p' pack/pack.toml)"
+          cobblemon="$(sed -n 's/^filename = "Cobblemon-fabric-\(.*\)+.*"$/\1/p' pack/mods/cobblemon.pw.toml)"
+          image="$(sed -n 's/^ *image: docker.io\/itzg\/minecraft-server:\([^@]*\)@.*$/\1/p' compose.yaml)"
+          {
+            printf '%s\n\n' "$body"
+            printf '<!-- pack-contents -->\n'
+            printf '| Pack | Minecraft | Fabric loader | Cobblemon | Server image |\n|---|---|---|---|---|\n'
+            printf '| %s | %s | %s | %s | %s |\n\n' "$VERSION" "$minecraft" "$fabric" "$cobblemon" "$image"
+            # shellcheck disable=SC2016  # the backticks are markdown, not command substitution
+            printf 'Players: install `cobblemon-%s.mrpack`. Admins: check out `%s`, set `PACK_VERSION=%s` in `.env`, put the file in `dist/`.\n' \
+              "$VERSION" "$TAG" "$VERSION"
+          } > notes.md
+          gh release edit "$TAG" --notes-file notes.md
 
   smoke:
     # Manual dispatch (needs the workflow on the default branch), or push a branch
