@@ -110,4 +110,4 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; grep for the two removed names
   - Files: `README.md`, `docs/admin-guide.md`, `docs/upgrade.md`, `docs/adr/0004-git-tag-is-the-release-version.md`, `docs/releases.md` (deleted), `tasks/todo.md`, `tasks/plan.md`
 
-- [ ] Checkpoint E: the human publishes pre-release `v1.0.0-rc.4` from the Releases page targeting this branch; CI attaches the mrpack with internal version 1.0.0-rc.4 and the real host; review; merge to `main`
+- [x] Checkpoint E (2026-11-06): the human published `v1.0.0-rc.4` from the Releases page targeting this branch; run 42216618658 attached the mrpack with internal version 1.0.0-rc.4 and the real host and appended the pack contents table. Follow-up approved by the human: CI marks `-rc.N` releases as pre-releases (rc.4 itself was published without the flag). Remaining: review of the Phase 5 diff, then merge to `main`

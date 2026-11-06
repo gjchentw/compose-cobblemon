@@ -38,7 +38,8 @@ pack/  ──export──▶  dist/cobblemon-X.Y.Z.mrpack  ──▶  players (M
    (both can be edited in the GitHub web editor).
 4. Publish a release: **Releases > Draft a new release**, type a new tag such as `v1.0.0` in
    **Choose a tag** and pick "Create new tag on publish", then **Publish release**. For a
-   release candidate use `v1.0.0-rc.1` and tick "Set as a pre-release".
+   release candidate use `v1.0.0-rc.1`; CI marks it as a pre-release even if you forget the
+   checkbox.
 5. Wait a few minutes. CI builds the pack for that tag, attaches `cobblemon-1.0.0.mrpack` to the
    release and adds a pack contents table to its notes. Send players the release link.
 

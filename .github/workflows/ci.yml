@@ -109,6 +109,12 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: gh release upload "$TAG" "dist/cobblemon-$VERSION.mrpack" --clobber
+      - name: A release candidate is always a pre-release
+        run: |
+          # The publisher may forget the checkbox; an rc must never become "Latest".
+          case "$TAG" in
+            *-rc.*) gh release edit "$TAG" --prerelease ;;
+          esac
       - name: Add the pack contents to the release notes
         env:
           VERSION: ${{ steps.version.outputs.version }}

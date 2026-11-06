@@ -17,8 +17,9 @@ published on GitHub; nothing in git is edited to release.
    - the backup image: same in `compose.yaml`
 2. `scripts/lint.sh && docker compose config -q && scripts/pack-export.sh && scripts/pack-inspect.sh`
 3. Commit and push; merge to `main` once CI is green.
-4. On GitHub, **Releases > Draft a new release**: new tag `vX.Y.Z-rc.1` on that commit, tick
-   "Set as a pre-release", publish. CI builds `cobblemon-X.Y.Z-rc.1.mrpack` and attaches it.
+4. On GitHub, **Releases > Draft a new release**: new tag `vX.Y.Z-rc.1` on that commit,
+   publish. CI builds `cobblemon-X.Y.Z-rc.1.mrpack`, attaches it and marks the release as a
+   pre-release.
 
 If only the release itself changes (no mod or image bump), skip steps 1 to 3.
 

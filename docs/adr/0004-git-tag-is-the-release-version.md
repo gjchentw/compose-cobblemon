@@ -33,4 +33,6 @@ compares it with `PACK_VERSION`, so a renamed or mismatched file is caught on th
   Cobblemon and server image versions. `scripts/release.sh` and `docs/releases.md` were
   removed.
 - A tag pushed without a GitHub release builds nothing; the release is the trigger.
+- CI marks any `-rc.N` release as a pre-release, so a candidate cannot become "Latest" by a
+  forgotten checkbox.
 - Local builds use the placeholder unless a version is passed to `scripts/pack-export.sh`.
