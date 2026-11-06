@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Export the pack from pack/ to dist/cobblemon-<version>.mrpack (L2).
-# The committed pack/ is copied to a fresh build directory first, so files
-# generated at export time (servers.dat with the real server host) never
-# touch the source of truth.
+# The committed pack/ is copied to a fresh build directory first, so what is
+# generated at export time (the release version, servers.dat with the real
+# server host) never touches the source of truth.
+#
+# Usage: scripts/pack-export.sh [X.Y.Z | X.Y.Z-rc.N]
+#   Without a version the pack is built as the 0.0.0-dev placeholder. CI passes
+#   the version of the release tag (see .github/workflows/ci.yml).
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -22,7 +26,10 @@ if [ "${GITHUB_REF_TYPE:-}" = "tag" ] || [ -n "${PACK_REQUIRE_REAL_HOST:-}" ]; t
   fi
 fi
 
-version="$(pack_version)"
+version="${1:-$(pack_version)}"
+if [ "$version" != "$PLACEHOLDER_VERSION" ] && ! is_release_version "$version"; then
+  fail "version must be X.Y.Z or X.Y.Z-rc.N, got: $version"
+fi
 
 mkdir -p .build dist
 # A fresh path on every run: Docker Desktop may serve stale contents for a
@@ -30,6 +37,8 @@ mkdir -p .build dist
 build_dir="$(mktemp -d .build/pack.XXXXXX)"
 trap 'rm -rf "$build_dir"' EXIT
 cp -R pack/. "$build_dir/"
+# The release version exists only in this build copy; pack/ keeps the placeholder.
+sed -i.bak "s/^version = \".*\"$/version = \"$version\"/" "$build_dir/pack.toml" && rm -f "$build_dir/pack.toml.bak"
 
 out="dist/cobblemon-$version.mrpack"
 run() {

@@ -95,7 +95,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
 
 ## Phase 5: The git tag is the release version (SPEC decision 10, 2026-11-06)
 
-- [ ] Task 16: Tag-derived version in the scripts
+- [x] Task 16: Tag-derived version in the scripts
   - Acceptance: `pack-export.sh 9.8.7` writes `dist/cobblemon-9.8.7.mrpack` with internal version 9.8.7 and leaves git clean; default is `0.0.0-dev`; RED cases for inspect, version-check and smoke recorded; `scripts/release.sh` deleted
   - Verify: `scripts/lint.sh && docker compose config -q`; `scripts/pack-export.sh && scripts/pack-inspect.sh && scripts/version-check.sh`; `scripts/smoke.sh`
   - Files: `pack/pack.toml`, `.env.example`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/pack-inspect.py`, `scripts/version-check.sh`, `scripts/smoke.sh`, `scripts/release.sh` (deleted)

@@ -6,7 +6,17 @@
 log() { printf '%s\n' "$*" >&2; }
 fail() { log "FAIL: $*"; exit 1; }
 
-# pack_version: the version field of pack/pack.toml (the release version).
+# The only version git ever holds; a release version exists only in a tag and
+# in the pack built for it.
+# shellcheck disable=SC2034  # used by the scripts that source this file
+PLACEHOLDER_VERSION="0.0.0-dev"
+
+# is_release_version VERSION: true for X.Y.Z and X.Y.Z-rc.N.
+is_release_version() {
+  printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$'
+}
+
+# pack_version: the version field of pack/pack.toml (the placeholder, by contract).
 # Use as `v="$(pack_version)"`: the fail inside the substitution aborts the
 # caller through the assignment's exit status under set -e.
 pack_version() {

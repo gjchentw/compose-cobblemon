@@ -92,10 +92,9 @@ def main(args):
     # pack metadata and pins
     check(index.get("formatVersion") == 1, "formatVersion is not 1")
     check(index.get("game") == "minecraft", "game is not minecraft")
+    # The expected version comes from the file name; pack.toml holds only a placeholder.
     check(index.get("versionId") == args.version,
-          f"versionId {index.get('versionId')!r} != expected {args.version!r}")
-    check(pack["version"] == args.version,
-          f"pack.toml version {pack['version']!r} != expected {args.version!r}")
+          f"versionId {index.get('versionId')!r} != version in the file name {args.version!r}")
     deps = index.get("dependencies", {})
     versions = pack["versions"]
     check(deps.get("minecraft") == versions["minecraft"],
