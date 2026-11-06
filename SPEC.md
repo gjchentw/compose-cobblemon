@@ -1,7 +1,7 @@
 # Spec: compose-cobblemon
 
 **Status:** APPROVED 2026-11-03 (SDD gate 1); living document, amended as decisions change
-**Spec version:** 0.2.0 (2026-11-03)
+**Spec version:** 0.3.0 (2026-11-06; decision 10: the git tag is the release version)
 **Source material:** the human's "Docker + Fabric + Cobblemon Server Deployment Plan" (Chinese), translated and tightened here. Where this spec deviates from that plan, the deviation is called out and recorded under Decisions.
 
 ## Objective
@@ -79,7 +79,7 @@ Player
 
 **Rejected alternative (Option A, as in the original plan).** The server would run the official modpack (`TYPE=MODRINTH`, `MODRINTH_MODPACK=5FFgwNNP`, `MODRINTH_VERSION=<cobblemon version>`) with a separately maintained client pack. Rejected because every bump would require auditing the official pack for server-side mods that need a client counterpart. Kept here as context for the ADR.
 
-**Version contract.** One release = one git tag `vX.Y.Z` = `pack.toml` version `X.Y.Z` = `cobblemon-X.Y.Z.mrpack` = `PACK_VERSION=X.Y.Z` in `.env` = MOTD "Cobblemon Server | Pack X.Y.Z". A release also records Minecraft, Fabric loader and Cobblemon versions in `docs/releases.md`.
+**Version contract.** The git tag is the only place a release version is written. One release = one git tag `vX.Y.Z` = `cobblemon-X.Y.Z.mrpack` (file name and the pack's internal version id) = `PACK_VERSION=X.Y.Z` in the host's `.env` = MOTD "Cobblemon Server | Pack X.Y.Z". In git, `pack/pack.toml` and `.env.example` carry the placeholder `0.0.0-dev`, never a release version; the build substitutes the tag's version into a copy of the pack. Publishing a GitHub release (UI or `gh release create`) with a new tag is the whole release procedure: CI builds the pack for that tag, attaches the mrpack, and writes the Minecraft, Fabric loader, Cobblemon and server image versions into the release notes.
 
 **Environments.** `compose.yaml` is production. `compose.staging.yaml` overrides container names, the published port (25566), data and backup directories (`staging/`), and the pack file, so staging runs on the same host without touching production data.
 
@@ -96,7 +96,7 @@ Pack check: docker compose --profile tools run --rm packwiz refresh   # must pro
 
 # L2 build
 Tools:      docker compose --profile tools build
-Export:     scripts/pack-export.sh     # -> dist/cobblemon-<PACK_VERSION>.mrpack
+Export:     scripts/pack-export.sh [X.Y.Z]   # -> dist/cobblemon-<version>.mrpack; default is the 0.0.0-dev placeholder
             scripts/pack-inspect.sh    # jq over modrinth.index.json: expected mods and side markers
 
 # Run
@@ -113,7 +113,7 @@ Backup now: docker compose exec backup backup now
 Restore:    scripts/restore-drill.sh   # restore latest backup into a scratch dir and verify
 
 # Release
-Release:    scripts/release.sh X.Y.Z   # bumps pack.toml + .env.example PACK_VERSION, exports, tags
+Release:    publish a GitHub release with a new tag vX.Y.Z (web UI, or `gh release create vX.Y.Z`); CI builds and attaches the mrpack
 ```
 
 ## Project Structure
@@ -131,18 +131,18 @@ pack/                     packwiz source of truth
   (servers.dat is generated at export time, never committed; see docs/adr/0003)
 tools/packwiz/Dockerfile  pinned packwiz image
 config/                   server-side files mounted into /data (server-icon.png, config overlays)
-scripts/                  lint.sh, pack-export.sh, pack-inspect.sh, smoke.sh, persist-test.sh,
-                          restore-drill.sh, release.sh
+scripts/                  lib.sh, lint.sh, pack-export.sh, pack-inspect.sh/.py, make-servers-dat.py,
+                          version-check.sh, smoke.sh, persist-test.sh, restore-drill.sh,
+                          staging-clone-world.sh, ci-env.sh
 docs/
   player-guide.md         install the pack, press Play
   player-guide.zh-TW.md   Traditional Chinese copy of the player guide; the only non-English file, see AGENTS.md
   admin-guide.md          day-2 operations: whitelist, ops, restart, logs, monitoring
   upgrade.md              upgrade SOP
   rollback.md             rollback SOP
-  releases.md             version contract table per release
   acceptance-checklist.md Phase 1 gameplay checklist (L5)
   adr/                    architecture decision records
-.github/workflows/ci.yml  L1 and L2 on push and PR; release on vX.Y.Z tag; L3 by manual dispatch
+.github/workflows/ci.yml  L1 and L2 on push and PR; pack build on a published release; L3/L4 by dispatch or smoke/* branch
 dist/                     exported mrpacks, gitignored, attached to releases
 data/ backups/ staging/   runtime data, gitignored
 SPEC.md AGENTS.md README.md tasks/
@@ -214,7 +214,7 @@ There are no unit tests. The verification ladder from `AGENTS.md` is made concre
 
 RED and GREEN for infrastructure: a task first adds or extends the check that fails without the change, then the smallest change that makes it pass, then every level named in the task's `Verify` line.
 
-CI (GitHub Actions) runs L1 and L2 on every push and pull request, and on a `vX.Y.Z` tag it exports the mrpack and attaches it to a GitHub Release. L3 is a manual workflow dispatch because a modded server boot is slow and memory-hungry on hosted runners.
+CI (GitHub Actions) runs L1 and L2 on every push and pull request with the placeholder version. When a GitHub release is published it derives the version from the tag, exports and inspects the pack for it, and uploads the mrpack to that release. L3 is a manual workflow dispatch because a modded server boot is slow and memory-hungry on hosted runners.
 
 ## Operations Requirements
 
@@ -228,8 +228,8 @@ These are requirements the repository must satisfy; the detailed procedures live
 2. Copy the production world into `staging/data`, start staging with the beta pack.
 3. Join staging with the beta client pack; run the L5 checklist; read the startup log.
 4. Take a pre-upgrade backup of production and move it to `backups/keep/`.
-5. Stop production, update `.env` `PACK_VERSION`, place the final mrpack in `dist/`, start, run L3 and L4.
-6. Tag the release, publish the mrpack, update `docs/releases.md`, notify players with the exact version string.
+5. Publish the final GitHub release `vX.Y.Z`; CI attaches the mrpack.
+6. Stop production, check out the tag, set `.env` `PACK_VERSION=X.Y.Z`, place the mrpack in `dist/`, start, run L3 and L4, notify players with the exact version string.
 
 Production never tracks `latest` of Cobblemon, Fabric loader, the image, or any mod.
 
@@ -274,7 +274,7 @@ Production never tracks `latest` of Cobblemon, Fabric loader, the image, or any 
 
 1. On a fresh Linux host with only Docker installed: clone, `cp .env.example .env`, set `RCON_PASSWORD`, run `scripts/pack-export.sh` then `docker compose up -d`; the stack is `healthy` within 10 minutes and a status query on port 25565 reports Minecraft 1.21.1.
 2. The exported `cobblemon-1.0.0.mrpack` installs in Modrinth App and in Prism Launcher; the game launches with no manual mod steps; "Cobblemon Server" is already in the Multiplayer list; a whitelisted account joins.
-3. Git tag `v1.0.0`, `pack.toml`, the mrpack filename, `PACK_VERSION` and the MOTD all read `1.0.0`.
+3. Git tag `v1.0.0`, the mrpack file name and internal version id, the host's `PACK_VERSION` and the MOTD all read `1.0.0`; `pack/pack.toml` and `.env.example` in git still read the `0.0.0-dev` placeholder.
 4. L1 through L4 pass locally; the restore drill restores a backup with the world intact.
 5. The staging stack runs next to production on port 25566 with a copied world, and the L5 checklist passes on staging and on production.
 6. Runbooks exist and were followed at least once each: player guide (English and Traditional Chinese), admin guide, upgrade SOP, rollback SOP.
@@ -304,6 +304,7 @@ Resolved with the human on 2026-11-03, one question at a time. Non-obvious ones 
 | 7 | Player guide language | English primary, plus `docs/player-guide.zh-TW.md` as an explicit exception recorded in `AGENTS.md` |
 | 8 | Backup cadence | One full tar archive every 24 hours, pause when no players are online, prune after 14 days, pre-upgrade archives kept in `backups/keep/` |
 | 9 | Server name and host for CI builds (2026-11-04) | GitHub repository secrets `SERVER_NAME` and `SERVER_PUBLIC_HOST`; the repository is a GitHub template so others create their own copy, set their own secrets and build their own pack |
+| 10 | Release version source (2026-11-06) | The git tag. Publishing a GitHub release builds the pack for that tag; `pack/pack.toml` and `.env.example` hold the `0.0.0-dev` placeholder; `scripts/release.sh` and `docs/releases.md` are removed (release history lives in GitHub Releases). Supersedes the "version committed in git" part of the original contract, so a template copy can release without any local tooling |
 
 No open questions remain.
 

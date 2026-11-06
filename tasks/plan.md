@@ -360,6 +360,68 @@ T1 lint harness
 - [ ] All `SPEC.md` success criteria met with evidence
 - [ ] `/agent-skills:review`, then `/agent-skills:code-simplify`, then `/agent-skills:ship` on the branch before merging to `main`
 
+### Phase 5: The git tag is the release version (added 2026-11-06, SPEC decision 10)
+
+Goal: a template copy releases by publishing a GitHub release; no local tooling, no version commit.
+
+#### Task 16: Tag-derived version in the scripts
+
+**Description:** `pack/pack.toml` and `.env.example` switch to the placeholder `0.0.0-dev`. `scripts/pack-export.sh [X.Y.Z]` substitutes the given version into the build copy of the pack (default: the placeholder) and never touches `pack/`. `scripts/pack-inspect.sh [FILE]` takes the expected version from the file name `cobblemon-<version>.mrpack` and `pack-inspect.py` compares the internal version id with it instead of with `pack.toml`. `scripts/version-check.sh` asserts that git holds only the placeholder and, given a tag (argument or `GITHUB_REF_NAME` on a tag ref), that it is `vX.Y.Z` or `vX.Y.Z-rc.N`, printing the version. `scripts/smoke.sh` drops the pack.toml comparison and instead reads the version id from the mounted mrpack inside the server container (unzip and jq are in the image) and compares it with `PACK_VERSION`. `scripts/release.sh` is deleted.
+
+**Acceptance criteria:**
+- [ ] `scripts/pack-export.sh 9.8.7` writes `dist/cobblemon-9.8.7.mrpack` with internal version id `9.8.7` and leaves `git status` clean; without an argument it writes `cobblemon-0.0.0-dev.mrpack`.
+- [ ] RED cases recorded: inspect fails on an mrpack whose file name and internal version disagree; version-check fails when `pack.toml` holds a release version and on a malformed tag; smoke fails when `PACK_VERSION` names an mrpack with a different internal version.
+- [ ] L1, L2 and L3 pass locally with `PACK_VERSION=0.0.0-dev`.
+
+**Verification:**
+- [ ] `scripts/lint.sh && docker compose config -q`
+- [ ] `scripts/pack-export.sh && scripts/pack-inspect.sh && scripts/version-check.sh`
+- [ ] `scripts/smoke.sh`
+
+**Dependencies:** Checkpoint D
+**Files likely touched:** `pack/pack.toml`, `.env.example`, `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/pack-inspect.py`, `scripts/version-check.sh`, `scripts/smoke.sh`, `scripts/release.sh` (deleted)
+**Estimated scope:** M (one concern across eight small files)
+
+#### Task 17: CI builds the pack when a release is published
+
+**Description:** `.github/workflows/ci.yml` triggers on `release: published` instead of tag pushes. The release job derives the version from the tag, validates it with `scripts/version-check.sh`, exports with the real host required, inspects, uploads the mrpack to the existing release with `gh release upload --clobber`, and appends a "Pack contents" table (Minecraft, Fabric loader, Cobblemon, server image) to the release notes. Branch and pull-request builds keep running L1 and L2 with the placeholder version.
+
+**Acceptance criteria:**
+- [ ] actionlint and yamllint clean; branch pushes still run lint, validate and pack green.
+- [ ] No job runs on a bare tag push; the release job runs only for the release event.
+- [ ] Proven at Checkpoint E.
+
+**Verification:**
+- [ ] `scripts/lint.sh`
+- [ ] GitHub Actions run on the branch push
+
+**Dependencies:** Task 16
+**Files likely touched:** `.github/workflows/ci.yml`
+**Estimated scope:** S
+
+#### Task 18: Documentation for the release-from-GitHub flow
+
+**Description:** README "Make it yours" and the version contract section describe publishing a release in the GitHub UI; the quick start explains that a deployment checks out the tag, sets `PACK_VERSION` and downloads the mrpack. `docs/admin-guide.md` and `docs/upgrade.md` replace `scripts/release.sh` with "publish a pre-release / release". ADR 0004 records the decision. `docs/releases.md` is deleted (release history lives in GitHub Releases and git history). Task 15's wording in `tasks/todo.md` and `tasks/plan.md` is updated to the new flow.
+
+**Acceptance criteria:**
+- [ ] No document mentions `scripts/release.sh` or `docs/releases.md`.
+- [ ] A reader following only README "Make it yours" can release without cloning the repository.
+- [ ] ADR 0004 has context, decision and consequences.
+
+**Verification:**
+- [ ] `scripts/lint.sh`
+- [ ] `grep -rn "release.sh\|releases.md"` returns nothing outside `tasks/` history and ADR 0004
+
+**Dependencies:** Task 17
+**Files likely touched:** `README.md`, `docs/admin-guide.md`, `docs/upgrade.md`, `docs/adr/0004-git-tag-is-the-release-version.md`, `docs/releases.md` (deleted), `tasks/todo.md`, `tasks/plan.md`
+**Estimated scope:** M
+
+### Checkpoint E: Release from the GitHub UI
+
+- [ ] The human publishes a pre-release with a new tag `v1.0.0-rc.4` targeting this branch from the Releases page
+- [ ] CI attaches `cobblemon-1.0.0-rc.4.mrpack`; its internal version id is `1.0.0-rc.4` and its server entry carries the real host
+- [ ] `/agent-skills:review` on the Phase 5 diff, then merge to `main`
+
 ## Parallelization
 
 With one agent the numbered order is the plan. If a second agent is available after Checkpoint B, Tasks 9, 10 and 11 are independent of each other (they touch disjoint files), and Task 12 can be drafted in parallel with Task 13. Tasks 6 to 8 must stay sequential because they all edit `compose.yaml`.
