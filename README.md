@@ -3,7 +3,8 @@
 A Cobblemon (Minecraft 1.21.1, Fabric) server and its matching client pack, shipped as
 one versioned release. Admins run everything with `docker compose`; players install one
 `.mrpack` and press Play. This repository is a GitHub template: create your own copy,
-set two secrets, tag a release, and CI builds the pack for your server.
+set two secrets, publish a release on GitHub, and CI builds the pack for your server.
+No local tooling is needed to release.
 
 - Players: read [docs/player-guide.md](docs/player-guide.md)
   (Traditional Chinese: [docs/player-guide.zh-TW.md](docs/player-guide.zh-TW.md)).
@@ -31,12 +32,19 @@ pack/  ──export──▶  dist/cobblemon-X.Y.Z.mrpack  ──▶  players (M
 1. Click **Use this template** and create your repository.
 2. In your repository go to **Settings > Secrets and variables > Actions > Secrets** and add
    `SERVER_PUBLIC_HOST` (the address players connect to, for example `mc.example.org`) and
-   `SERVER_NAME` (what players see in their server list). Tag builds refuse to publish a pack
-   without them.
-3. Optional: replace `config/server-icon.png`, change `name` and `author` in `pack/pack.toml`,
-   and reset `docs/releases.md` to the table header so it records your releases, not ours.
-4. Cut a release from your clone with `scripts/release.sh X.Y.Z` and push the tag. CI attaches
-   `cobblemon-X.Y.Z.mrpack` to a GitHub Release; send players the link.
+   `SERVER_NAME` (what players see in their server list). Release builds refuse to publish a
+   pack without them.
+3. Optional: replace `config/server-icon.png` and change `name` and `author` in `pack/pack.toml`
+   (both can be edited in the GitHub web editor).
+4. Publish a release: **Releases > Draft a new release**, type a new tag such as `v1.0.0` in
+   **Choose a tag** and pick "Create new tag on publish", then **Publish release**. For a
+   release candidate use `v1.0.0-rc.1` and tick "Set as a pre-release".
+5. Wait a few minutes. CI builds the pack for that tag, attaches `cobblemon-1.0.0.mrpack` to the
+   release and adds a pack contents table to its notes. Send players the release link.
+
+The tag is the version: it must be `vX.Y.Z` or `vX.Y.Z-rc.N`, and nothing in git has to be
+edited to release. If the build fails, open the run under **Actions**; the usual cause is a
+missing secret or a tag in another format. After fixing it, re-run the failed job.
 
 ## Quick start (Docker host)
 
@@ -45,14 +53,18 @@ Requirements: Linux with Docker 24+ and Compose 2.24+ (the staging override uses
 ```bash
 git clone https://github.com/<you>/<your-repo>.git   # your copy of this template
 cd <your-repo>
+git checkout v1.0.0             # the release you deploy
 cp .env.example .env
-# edit .env: RCON_PASSWORD (openssl rand -base64 32), SERVER_NAME, SERVER_PUBLIC_HOST,
-#            MEMORY, and UID/GID from `id -u` / `id -g`
+# edit .env: PACK_VERSION=1.0.0 (the tag without the "v"), RCON_PASSWORD (openssl rand -base64 32),
+#            SERVER_NAME, SERVER_PUBLIC_HOST, MEMORY, and UID/GID from `id -u` / `id -g`
 mkdir -p data backups/keep dist && chmod 750 data backups   # yours, not root's; private
-scripts/pack-export.sh          # or download the release mrpack into dist/
+# download cobblemon-1.0.0.mrpack from the release page into dist/
 docker compose up -d
-scripts/smoke.sh                # waits for healthy, checks version, mods and RCON exposure
+scripts/smoke.sh                # waits for healthy; checks version, pack, mods, RCON exposure
 ```
+
+To try the stack without a release, keep `PACK_VERSION=0.0.0-dev` and run `scripts/pack-export.sh`
+instead of downloading: it builds `dist/cobblemon-0.0.0-dev.mrpack` from `pack/`.
 
 Open 25565/tcp to players. Whitelist them with
 `docker compose exec cobblemon rcon-cli whitelist add PLAYER_NAME`.
@@ -73,10 +85,12 @@ The same scripts test the staging stack with `COMPOSE_FILE=compose.yaml:compose.
 
 ## Version contract
 
-One release is one git tag `vX.Y.Z`, one `pack/pack.toml` version, one
-`dist/cobblemon-X.Y.Z.mrpack`, one `PACK_VERSION` and the MOTD `... | Pack X.Y.Z`.
-`scripts/release.sh X.Y.Z` cuts a release; CI attaches the mrpack to a GitHub Release.
-History: [docs/releases.md](docs/releases.md).
+The git tag is the only place a release version is written. One release is one tag `vX.Y.Z`,
+one `cobblemon-X.Y.Z.mrpack` (file name and the version inside the pack), one `PACK_VERSION`
+in the host's `.env` and the MOTD `... | Pack X.Y.Z`. In git, `pack/pack.toml` and
+`.env.example` always read `0.0.0-dev`; CI substitutes the tag's version when it builds the
+pack for a published release. `scripts/smoke.sh` checks the running server against this
+contract. Release history is the repository's Releases page.
 
 ## Repository layout
 
@@ -87,10 +101,10 @@ compose.staging.yaml      staging override: own project name, port 25566, stagin
 pack/                     packwiz source of truth (pack.toml, index.toml, mods/*.pw.toml, options.txt)
 tools/packwiz/Dockerfile  packwiz built from a pinned commit
 config/server-icon.png    placeholder icon, replace with your own
-scripts/                  lint, pack-export, pack-inspect, smoke, persist-test, restore-drill,
-                          staging-clone-world, version-check, release
-docs/                     guides, SOPs, checklist, releases, adr/
-.github/workflows/ci.yml  L1 + L2 on push, release on tag, smoke on manual dispatch
+scripts/                  lint, pack-export, pack-inspect, version-check, smoke, persist-test,
+                          restore-drill, staging-clone-world, ci-env
+docs/                     guides, SOPs, checklist, adr/
+.github/workflows/ci.yml  L1 + L2 on push; pack build on a published release; L3/L4 on dispatch
 SPEC.md                   what this repo builds and how it is verified
 AGENTS.md                 how AI agents and humans collaborate here
 tasks/                    implementation plan and task list

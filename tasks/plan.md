@@ -340,19 +340,18 @@ T1 lint harness
 
 #### Task 15: L5 acceptance on staging and the 1.0.0 release
 
-**Description:** Human-driven, agent-assisted. Run the acceptance checklist on staging with the rc pack and at least two players. Any failure becomes a new task (ask first). When the checklist passes: `scripts/release.sh 1.0.0`, push the tag, confirm the GitHub Release, set `PACK_VERSION=1.0.0` on production, `up -d`, run L3 and L4 and the restore drill on production, fill in `docs/releases.md`, notify players.
+**Description:** Human-driven, agent-assisted. Run the acceptance checklist on staging with a release candidate pack and at least two players. Any failure becomes a new task (ask first). When the checklist passes: publish release `v1.0.0` on GitHub (see Phase 5; CI builds and attaches the pack), check out the tag on production, set `PACK_VERSION=1.0.0`, put the mrpack in `dist/`, `up -d`, run L3 and L4 and the restore drill on production, add the outcome to the release notes, notify players.
 
 **Acceptance criteria:**
 - [ ] `docs/acceptance-checklist.md` is filled in with all items passing on staging and on production.
 - [ ] SPEC success criteria 1 through 7 are demonstrated with output shown to the human.
-- [ ] Git tag, `pack.toml`, mrpack name, `PACK_VERSION` and MOTD all read `1.0.0`.
+- [ ] Git tag, mrpack name and internal version, the host's `PACK_VERSION` and the MOTD all read `1.0.0`.
 
 **Verification:**
-- [ ] `scripts/version-check.sh`
 - [ ] `scripts/smoke.sh && scripts/persist-test.sh && scripts/restore-drill.sh` on production
 
-**Dependencies:** Tasks 12, 13, 14
-**Files likely touched:** `docs/acceptance-checklist.md`, `docs/releases.md`, `pack/pack.toml`, `.env.example`
+**Dependencies:** Tasks 12, 13, 14; Phase 5
+**Files likely touched:** `docs/acceptance-checklist.md`, the host's `.env` (not committed)
 **Estimated scope:** S
 
 ### Checkpoint D: Complete

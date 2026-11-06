@@ -87,9 +87,9 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Files: `README.md`, `docs/adr/0001-single-pack-for-client-and-server.md`, `docs/adr/0002-itzg-image-and-mc-backup-sidecar.md`, `docs/adr/0003-servers-dat-generated-at-export.md`
 
 - [ ] Task 15: L5 acceptance on staging and the 1.0.0 release
-  - Acceptance: checklist passes on staging and production with at least two players; SPEC success criteria 1 to 7 demonstrated; tag, `pack.toml`, mrpack name, `PACK_VERSION`, MOTD all read 1.0.0
-  - Verify: `scripts/version-check.sh`; `scripts/smoke.sh && scripts/persist-test.sh && scripts/restore-drill.sh` on production
-  - Files: `docs/acceptance-checklist.md`, `docs/releases.md`, `pack/pack.toml`, `.env.example`
+  - Acceptance: checklist passes on staging and production with at least two players; SPEC success criteria 1 to 7 demonstrated; release `v1.0.0` published on GitHub and built by CI; tag, mrpack name and internal version, the host's `PACK_VERSION` and the MOTD all read 1.0.0
+  - Verify: `scripts/smoke.sh && scripts/persist-test.sh && scripts/restore-drill.sh` on production
+  - Files: `docs/acceptance-checklist.md` (filled in), the host's `.env` (not committed)
 
 - [x] Checkpoint D (2026-11-04): review, code-simplify and ship done; ship findings fixed; L3/L4 green on a Linux runner (run 41774973583). Remaining: Task 15 by the human, then tag v1.0.0
 
@@ -105,7 +105,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; GitHub Actions run on the branch push
   - Files: `.github/workflows/ci.yml`
 
-- [ ] Task 18: Documentation for the release-from-GitHub flow
+- [x] Task 18: Documentation for the release-from-GitHub flow
   - Acceptance: no document mentions `scripts/release.sh` or `docs/releases.md`; README "Make it yours" is enough to release without a clone; ADR 0004 written; `docs/releases.md` deleted; Task 15 wording updated
   - Verify: `scripts/lint.sh`; grep for the two removed names
   - Files: `README.md`, `docs/admin-guide.md`, `docs/upgrade.md`, `docs/adr/0004-git-tag-is-the-release-version.md`, `docs/releases.md` (deleted), `tasks/todo.md`, `tasks/plan.md`

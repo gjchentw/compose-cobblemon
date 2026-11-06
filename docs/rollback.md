@@ -51,4 +51,4 @@ What you need, all created by `docs/upgrade.md`:
    After the smoke test passes and players confirm the world, delete the aside copies:
    `docker compose exec cobblemon rm -rf /data/world.pre-rollback /data/config.pre-rollback`.
 5. Tell players to install the previous pack version from the Releases page and join again.
-6. Note the rollback and the reason in `docs/releases.md`, then open an issue for the failed release.
+6. Note the rollback and the reason in the failed version's GitHub release notes, then open an issue for it.

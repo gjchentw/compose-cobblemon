@@ -9,16 +9,17 @@ root on the Docker host. The host needs Docker 24+ with Compose 2.24+ and bash.
    check out the release tag you are deploying:
    `git clone https://github.com/<you>/<your-repo>.git && cd <your-repo> && git checkout v1.0.0`
 2. `cp .env.example .env` and edit `.env`:
+   - `PACK_VERSION`: the release you deploy, the tag without the "v" (`1.0.0`)
    - `RCON_PASSWORD`: `openssl rand -base64 32`
    - `SERVER_NAME`, `SERVER_PUBLIC_HOST`: what players will see and connect to
    - `MEMORY`: `6G` on a 12 GB host, `4G` on an 8 GB host
    - `UID` and `GID`: the output of `id -u` and `id -g`
 3. `mkdir -p data backups/keep dist && chmod 750 data backups` so the directories belong to
    you, not to root, and other accounts on the host cannot read the world or the RCON password.
-4. Put the pack in `dist/`. Either download `cobblemon-<version>.mrpack` from your
-   repository's Releases page into `dist/`, or build it locally with `scripts/pack-export.sh`
-   (builds the tools image first). Send players the Release link; the player guide tells them
-   to expect it from you.
+4. Put the pack in `dist/`: download `cobblemon-<version>.mrpack` from that release on your
+   repository's Releases page. The file name must match `PACK_VERSION`; `scripts/smoke.sh` also
+   checks the version inside the file. Send players the release link; the player guide tells
+   them to expect it from you.
 5. `docker compose up -d`, then `scripts/smoke.sh`. The first start downloads the
    server-side mods and takes a few minutes; the smoke test waits up to 10 minutes.
 6. Open port 25565/tcp on the host firewall. Never open 25575 (RCON).

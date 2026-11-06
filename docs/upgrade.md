@@ -4,10 +4,11 @@ Upgrade the pack (Cobblemon, Fabric, any mod) or the server image without surpri
 players. The rule: production never tracks "latest"; every change is a release that was
 tested on staging with a copy of the production world.
 
-Versions follow the contract in `docs/releases.md`: tag, `pack/pack.toml`,
-mrpack name, `PACK_VERSION` and MOTD all carry the same `X.Y.Z`.
+The git tag is the version (see README "Version contract"): tag, mrpack name and the
+version inside it, `PACK_VERSION` and MOTD all carry the same `X.Y.Z`. Releases are
+published on GitHub; nothing in git is edited to release.
 
-## 1. Prepare the release candidate (developer machine)
+## 1. Prepare the release candidate
 
 1. Branch from `main`. Bump what changes:
    - a mod: `docker compose --profile tools run --rm packwiz modrinth install <modrinth version URL> -y`
@@ -15,8 +16,11 @@ mrpack name, `PACK_VERSION` and MOTD all carry the same `X.Y.Z`.
    - the server image: change tag and digest in `compose.yaml` (ask first, see `AGENTS.md`)
    - the backup image: same in `compose.yaml`
 2. `scripts/lint.sh && docker compose config -q && scripts/pack-export.sh && scripts/pack-inspect.sh`
-3. Commit, then `scripts/release.sh X.Y.Z-rc.1` and push the branch and the tag.
-   CI builds the mrpack and publishes a GitHub pre-release `vX.Y.Z-rc.1`.
+3. Commit and push; merge to `main` once CI is green.
+4. On GitHub, **Releases > Draft a new release**: new tag `vX.Y.Z-rc.1` on that commit, tick
+   "Set as a pre-release", publish. CI builds `cobblemon-X.Y.Z-rc.1.mrpack` and attaches it.
+
+If only the release itself changes (no mod or image bump), skip steps 1 to 3.
 
 ## 2. Test on staging (Docker host)
 
@@ -32,9 +36,9 @@ mrpack name, `PACK_VERSION` and MOTD all carry the same `X.Y.Z`.
    ```
 5. Install the rc client pack and join staging on port 25566. Run `docs/acceptance-checklist.md`
    with at least two players. Read the staging log for warnings: `COMPOSE_FILE=compose.yaml:compose.staging.yaml docker compose logs cobblemon | grep -iE 'warn|error'`.
-6. Anything fails: fix, cut `rc.2`, repeat. Nothing fails: cut the final release on the
-   developer machine with `scripts/release.sh X.Y.Z`, push branch and tag, wait for the
-   GitHub Release.
+6. Anything fails: fix, publish `rc.2`, repeat. Nothing fails: publish the final release
+   `vX.Y.Z` on the same commit (a commit may carry both the rc tag and the final tag) and
+   wait for CI to attach `cobblemon-X.Y.Z.mrpack`.
 
 ## 3. Upgrade production (Docker host)
 
@@ -48,8 +52,8 @@ mrpack name, `PACK_VERSION` and MOTD all carry the same `X.Y.Z`.
 3. `docker compose stop`
 4. `git checkout vX.Y.Z`, put `cobblemon-X.Y.Z.mrpack` in `dist/`, set `PACK_VERSION=X.Y.Z` in `.env`.
 5. `docker compose up -d && scripts/smoke.sh && scripts/restore-drill.sh`
-6. Record the result in `docs/releases.md` (Notes column), publish the GitHub Release notes,
-   and tell players the new pack version and where to download it (`docs/player-guide.md`).
+6. Add the outcome to the GitHub release notes and tell players the new pack version and
+   where to download it (`docs/player-guide.md`).
 7. Stop staging: `COMPOSE_FILE=compose.yaml:compose.staging.yaml docker compose down`.
 
 Keep the previous tag checked out somewhere you can reach, the previous mrpack in `dist/`
