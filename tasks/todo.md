@@ -86,7 +86,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/lint.sh`; clean-clone transcript summary
   - Files: `README.md`, `docs/adr/0001-single-pack-for-client-and-server.md`, `docs/adr/0002-itzg-image-and-mc-backup-sidecar.md`, `docs/adr/0003-servers-dat-generated-at-export.md`
 
-- [ ] Task 15: L5 acceptance on staging and the 1.0.0 release
+- [x] Task 15: L5 acceptance on staging and the 1.0.0 release (the human reported the acceptance checklist passed on 2026-11-07; v1.0.0 is published from the Releases page on main)
   - Acceptance: checklist passes on staging and production with at least two players; SPEC success criteria 1 to 7 demonstrated; release `v1.0.0` published on GitHub and built by CI; tag, mrpack name and internal version, the host's `PACK_VERSION` and the MOTD all read 1.0.0
   - Verify: `scripts/smoke.sh && scripts/persist-test.sh && scripts/restore-drill.sh` on production
   - Files: `docs/acceptance-checklist.md` (filled in), the host's `.env` (not committed)
@@ -114,7 +114,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
 
 ## Fixes after Phase 5
 
-- [ ] Task 19: World map key must not block the Cobblemon starter screen (reported by the human 2026-11-07)
+- [x] Task 19: World map key must not block the Cobblemon starter screen (reported by the human 2026-11-07; in-game check of M and V passed)
   - Acceptance: `pack/options.txt` binds `gui.xaero_open_map` to V; the exported pack carries it; pressing M on a fresh client opens the Cobblemon starter screen (human check with the local client); player guides list the keys
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/` after refresh; human check
   - Files: `pack/options.txt`, `pack/index.toml`, `docs/player-guide.md`, `docs/player-guide.zh-TW.md`, `docs/acceptance-checklist.md`, `SPEC.md`, `tasks/todo.md`
