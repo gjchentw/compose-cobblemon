@@ -141,6 +141,11 @@ def main(args):
     expected_options = (pack_dir / "options.txt").read_bytes()
     check(overrides.get("overrides/options.txt") == expected_options,
           "overrides/options.txt differs from the committed pack/options.txt")
+    # Without a leading "version:<data version>" line Minecraft treats the file
+    # as a legacy format and its upgrade pass drops the mod key bindings.
+    first = expected_options.decode("utf-8", "replace").splitlines()[:1]
+    check(bool(first) and first[0].startswith("version:") and first[0][len("version:"):].isdigit(),
+          "pack/options.txt must start with 'version:<Minecraft data version>' (1.21.1: 3955)")
     servers = overrides.get("overrides/servers.dat", b"")
     try:
         entries = nbt_reader()(servers).root().get("servers", [])

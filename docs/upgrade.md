@@ -14,6 +14,9 @@ published on GitHub; nothing in git is edited to release.
    - a mod: `docker compose --profile tools run --rm packwiz modrinth install <modrinth version URL> -y`
      (or `packwiz update <mod>`), then set its `side` if needed and `packwiz refresh`
    - the server image: change tag and digest in `compose.yaml` (ask first, see `AGENTS.md`)
+   - Minecraft itself: also update the first line of `pack/options.txt` to the new data
+     version (`version:<n>`, the `world_version` of that Minecraft release; 1.21.1 is 3955),
+     or the game discards the pack's key bindings on first launch
    - the backup image: same in `compose.yaml`
 2. `scripts/lint.sh && docker compose config -q && scripts/pack-export.sh && scripts/pack-inspect.sh`
 3. Commit and push; merge to `main` once CI is green.

@@ -313,6 +313,7 @@ No open questions remain.
 - `itzg/minecraft-server:latest` is Java 25; using it with 1.21.1 Fabric mods is unsupported territory. Mitigated by pinning the java21 tag.
 - The image's default healthcheck is too strict for modded startup; the compose file sets a 5 minute start period.
 - Launchers may re-apply pack overrides on in-place updates and overwrite a player's `servers.dat`. Moot by design: the player guide updates by installing the new mrpack as a new profile, which always carries the pre-filled entry.
+- A shipped `options.txt` without a leading `version:<data version>` line is treated by Minecraft as a legacy file and its upgrade pass drops the mod key bindings (seen in 1.0.0: the world map stayed on M). `pack/options.txt` starts with the data version and `pack-inspect.py` enforces it; the number must follow the Minecraft version.
 - `itzg` cleans mods from a previous modpack version on upgrade; the world is untouched but custom files under `data/mods` would be removed. All server-side additions must go through the pack, never by hand.
 - Modrinth API rate limits can slow a first boot; the smoke timeout is 10 minutes to absorb this.
 
