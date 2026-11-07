@@ -27,7 +27,7 @@ User stories:
 - Production Compose stack: Cobblemon server + backup sidecar.
 - Staging Compose override runnable next to production on the same host.
 - One pack definition that produces the client `.mrpack` and feeds the server (see Architecture).
-- Client defaults shipped in the pack: performance options and a pre-filled server list.
+- Client defaults shipped in the pack: performance options, a pre-filled server list, and the Xaero's World Map key moved from M to V so it cannot block Cobblemon's starter and summary screen (also on M; decided 2026-11-07).
 - Client QoL mods in 1.0.0: Mod Menu, EMI, Xaero's Minimap, Xaero's World Map, AppleSkin, Mouse Tweaks, plus Text Placeholder API as the required dependency of Mod Menu (client side only; decided 2026-11-03).
 - Verification scripts: smoke, persistence, backup restore drill.
 - Runbooks: player install guide (English, plus a Traditional Chinese copy), admin guide, upgrade SOP, rollback SOP.

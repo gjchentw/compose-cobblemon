@@ -13,7 +13,7 @@ On staging the pre-filled entry points at production; for item 1 add the staging
 |---|---|---|---|---|
 | 1 | Login | Install the pack from the Releases page as in `docs/player-guide.md`, join from the pre-filled server entry | | |
 | 2 | Pokémon spawn | Walk around spawn for two minutes; wild Pokémon appear in grass, water and caves | | |
-| 3 | Starter selection | A new player opens the starter screen and receives the chosen Pokémon | | |
+| 3 | Starter selection | A new player presses M, gets the starter screen (not the world map, which is on V) and receives the chosen Pokémon | | |
 | 4 | Catch | Craft or receive Poké Balls, weaken a wild Pokémon, catch it; it appears in the party | | |
 | 5 | Battle | Challenge a wild Pokémon and a second player; both battles start, run and end | | |
 | 6 | Trade | Two players open a trade and exchange Pokémon; both parties update | | |

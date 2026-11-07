@@ -5,3 +5,4 @@ particles:1
 biomeBlendRadius:2
 renderClouds:"fast"
 maxFps:120
+key_gui.xaero_open_map:key.keyboard.v
