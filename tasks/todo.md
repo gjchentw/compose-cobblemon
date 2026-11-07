@@ -119,7 +119,7 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/` after refresh; human check
   - Files: `pack/options.txt`, `pack/index.toml`, `docs/player-guide.md`, `docs/player-guide.zh-TW.md`, `docs/acceptance-checklist.md`, `SPEC.md`, `tasks/todo.md`
 
-- [ ] Task 20: Pack key bindings must survive the first launch (found in 1.0.0 by the human, 2026-11-07)
+- [x] Task 20: Pack key bindings must survive the first launch (found in 1.0.0 by the human, 2026-11-07; fixed and verified on a fresh profile; shipped as v1.0.1, run 42332333361)
   - Acceptance: `pack/options.txt` starts with `version:3955`; a fresh profile installed from the pack keeps `key_gui.xaero_open_map` on V after the game runs (reproduced: without the line it reverted to M, with it it stayed V); `pack-inspect.py` rejects an options.txt without the line
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/` after refresh; fresh-profile test with the exported pack
   - Files: `pack/options.txt`, `pack/index.toml`, `pack/pack.toml`, `scripts/pack-inspect.py`, `docs/upgrade.md`, `SPEC.md`, `tasks/todo.md`
