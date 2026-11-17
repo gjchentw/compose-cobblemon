@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# L3 smoke test. Before starting anything: PACK_VERSION is well formed, the
-# checked-out commit carries that release's tag, the mrpack for it exists and
-# really is that version inside. Then start the stack, wait for healthy, and
+# L3 smoke test. Before starting anything: .env does not set PACK_VERSION,
+# dist/cobblemon.mrpack and its version file dist/cobblemon.env exist, and the
+# version Compose reads is well formed and is the version inside the pack.
+# Then start the stack, wait for healthy, and
 # check the version and MOTD, the current boot's log, the exact server-side
 # mod set, the JVM, the security properties, the backup sidecar, the
 # published port and RCON exposure.
@@ -10,6 +11,7 @@
 # Env:   SMOKE_TIMEOUT  seconds to wait for healthy (default 600)
 #        COMPOSE_FILE / COMPOSE_PROJECT_NAME  honoured by docker compose, so the
 #        same script serves staging (see compose.staging.yaml).
+#        COMPOSE_ENV_FILES  defaults to .env,dist/cobblemon.env (scripts/lib.sh).
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -23,21 +25,26 @@ service="cobblemon"
 [ -n "$(env_value RCON_PASSWORD)" ] || fail "RCON_PASSWORD is empty; set a real one in .env"
 
 # The mod set and versions the test expects come from pack/ at the checked-out
-# commit (check out the release tag you deploy); the release version comes
-# from PACK_VERSION and is compared with the pack file itself further down.
-env_v="$(env_value PACK_VERSION)"
-if [ "$env_v" != "$PLACEHOLDER_VERSION" ] && ! is_release_version "$env_v"; then
-  fail "PACK_VERSION must be X.Y.Z or X.Y.Z-rc.N (the tag without the \"v\"), got: $env_v"
+# commit; the pack and its version file in dist/ come from the same checkout
+# (CI commits them together), and PACK_VERSION is read from the version file.
+for f in dist/cobblemon.mrpack dist/cobblemon.env; do
+  [ -f "$f" ] || fail "$f is missing; run git pull on main, or scripts/pack-export.sh to build one"
+done
+# A PACK_VERSION left in .env from before the version file existed would be
+# used by any Compose command run without COMPOSE_ENV_FILES.
+if [ -f .env ] && grep -q '^PACK_VERSION=' .env; then
+  fail "remove the PACK_VERSION line from .env: the version comes from dist/cobblemon.env"
 fi
-check_release_checkout "$env_v" || fail "the checkout does not match PACK_VERSION"
-[ -f "dist/cobblemon-$env_v.mrpack" ] \
-  || fail "dist/cobblemon-$env_v.mrpack is missing; download it from the release or run scripts/pack-export.sh"
-# The file name is only a claim; the version id inside the pack is the fact.
+env_v="$(env_value PACK_VERSION)"
+is_pack_version "$env_v" \
+  || fail "PACK_VERSION must be YYYY.MM.DD-<7-character commit> or $PLACEHOLDER_VERSION, got: $env_v"
+# The version file is only a claim; the version id inside the pack is the fact.
 # Read in a one-off container of the server image (it ships unzip and jq)
 # before the server starts, so a mislabeled pack is never installed.
 inside="$(docker compose --progress quiet run --rm --no-deps -T --entrypoint sh "$service" \
-  -c 'unzip -p "$1" modrinth.index.json | jq -r .versionId' sh "/packs/cobblemon-$env_v.mrpack" | tr -d '\r')"
-[ "$inside" = "$env_v" ] || fail "dist/cobblemon-$env_v.mrpack carries version ${inside:-nothing readable} inside, not $env_v"
+  -c 'unzip -p "$1" modrinth.index.json | jq -r .versionId' sh /packs/cobblemon.mrpack | tr -d '\r')"
+[ "$inside" = "$env_v" ] \
+  || fail "dist/cobblemon.mrpack carries version ${inside:-nothing readable} inside, but PACK_VERSION is $env_v"
 minecraft="$(sed -n 's/^minecraft = "\(.*\)"$/\1/p' pack/pack.toml)"
 cobblemon_version="$(sed -n 's/^filename = "Cobblemon-fabric-\(.*\)+.*"$/\1/p' pack/mods/cobblemon.pw.toml)"
 [ -n "$minecraft" ] && [ -n "$cobblemon_version" ] || fail "cannot read the Minecraft or Cobblemon version from pack/"

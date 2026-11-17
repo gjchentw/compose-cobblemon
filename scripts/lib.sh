@@ -30,32 +30,6 @@ commit_version() {
   printf '%s-%s\n' "${line%% *}" "$(printf '%s' "${line#* }" | cut -c1-7)"
 }
 
-# is_release_version VERSION: true for X.Y.Z and X.Y.Z-rc.N (the whole string,
-# not any one line of it).
-is_release_version() {
-  local re='^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$'
-  [[ "$1" =~ $re ]]
-}
-
-# check_release_checkout VERSION
-# For a release version in a git work tree, the checked-out commit must carry
-# the tag vVERSION, so the compose files and pack/ on disk are the ones that
-# release was built from. A tag this clone does not know (not fetched) only
-# warns. The placeholder version and non-git directories are not checked.
-check_release_checkout() {
-  local version="$1"
-  [ "$version" != "$PLACEHOLDER_VERSION" ] || return 0
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
-  if ! git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
-    log "WARNING: tag v$version is not known in this clone (git fetch --tags); cannot verify that the checkout matches the release"
-    return 0
-  fi
-  if ! git tag --points-at HEAD | grep -Fxc "v$version" >/dev/null; then
-    log "PACK_VERSION=$version but the checked-out commit is not tagged v$version; run: git fetch --tags && git checkout v$version"
-    return 1
-  fi
-}
-
 # The environment files Compose reads, as the administrator's shell has them:
 # COMPOSE_ENV_FILES=.env,dist/cobblemon.env (dist/cobblemon.env holds only
 # PACK_VERSION; the later file wins). When the caller has not set it, use the
