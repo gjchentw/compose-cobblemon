@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Assert an exported .mrpack matches the committed pack exactly.
 
-Usage: pack-inspect.py <file.mrpack> <expected-version> --name NAME --host HOST
-                       [--pack /work/pack]
+Usage: pack-inspect.py <file.mrpack> --name NAME --host HOST
+                       [--expect VERSION] [--pack /work/pack]
 
 Two independent sources are compared against modrinth.index.json:
 
@@ -14,13 +14,15 @@ Two independent sources are compared against modrinth.index.json:
   unplanned dependency or a changed side fails here.
 
 Every mod must come from cdn.modrinth.com, the overrides must be exactly
-options.txt (identical to the committed file) and servers.dat (carrying the
-name and host it was generated from). Standard library only.
+options.txt (identical to the committed file) and servers.dat (one entry named
+"NAME (<version>)" for HOST). The pack's version must have the pack version
+format and, with --expect, equal VERSION. Standard library only.
 """
 import argparse
 import importlib.util
 import json
 import pathlib
+import re
 import sys
 import tomllib
 import zipfile
@@ -73,6 +75,16 @@ def read_pack(pack_dir):
     return pack, mods
 
 
+# The pack version format; the same rule as is_pack_version in scripts/lib.sh.
+PLACEHOLDER_VERSION = "0.0.0-dev"
+PACK_VERSION_RE = re.compile(r"[0-9]{4}\.(0[1-9]|1[0-2])\.(0[1-9]|[12][0-9]|3[01])-[0-9a-f]{7}")
+
+
+def is_pack_version(version):
+    return version == PLACEHOLDER_VERSION or (
+        isinstance(version, str) and PACK_VERSION_RE.fullmatch(version) is not None)
+
+
 def main(args):
     failures = []
 
@@ -92,9 +104,12 @@ def main(args):
     # pack metadata and pins
     check(index.get("formatVersion") == 1, "formatVersion is not 1")
     check(index.get("game") == "minecraft", "game is not minecraft")
-    # The expected version comes from the file name; pack.toml holds only a placeholder.
-    check(index.get("versionId") == args.version,
-          f"versionId {index.get('versionId')!r} != version in the file name {args.version!r}")
+    # pack.toml holds only the placeholder; export substitutes the commit's version.
+    version = index.get("versionId")
+    check(is_pack_version(version),
+          f"versionId {version!r} is not YYYY.MM.DD-<7-character commit> or {PLACEHOLDER_VERSION}")
+    if args.expect is not None:
+        check(version == args.expect, f"versionId {version!r} != expected version {args.expect!r}")
     deps = index.get("dependencies", {})
     versions = pack["versions"]
     check(deps.get("minecraft") == versions["minecraft"],
@@ -154,7 +169,8 @@ def main(args):
         failures.append(f"servers.dat does not parse as NBT: {exc}")
     check(len(entries) == 1, f"servers.dat holds {len(entries)} entries, expected 1")
     if entries:
-        check(entries[0].get("name") == args.name, f"servers.dat name {entries[0].get('name')!r} != {args.name!r}")
+        want_name = f"{args.name} ({version})"
+        check(entries[0].get("name") == want_name, f"servers.dat name {entries[0].get('name')!r} != {want_name!r}")
         check(entries[0].get("ip") == args.host, f"servers.dat ip {entries[0].get('ip')!r} != {args.host!r}")
 
     print(f"{args.file}: version {index.get('versionId')}, minecraft {deps.get('minecraft')}, "
@@ -176,7 +192,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("file")
-    parser.add_argument("version")
+    parser.add_argument("--expect")
     parser.add_argument("--name", required=True)
     parser.add_argument("--host", required=True)
     parser.add_argument("--pack", default="/work/pack")

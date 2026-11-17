@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Assert an exported mrpack matches the expected pack contents (L2).
 # Runs scripts/pack-inspect.py inside the tools image; the host needs only Docker.
-# Usage: scripts/pack-inspect.sh [dist/cobblemon-<version>.mrpack]
-#   The expected version is taken from the file name (the name is part of the
-#   version contract). Default: the placeholder build, dist/cobblemon-0.0.0-dev.mrpack.
-#   The path must be inside the repository (it is read in the tools container).
+# Usage: scripts/pack-inspect.sh [--expect VERSION] [FILE]
+#   FILE defaults to dist/cobblemon.mrpack and must be inside the repository
+#   (it is read in the tools container). The pack's version must have the pack
+#   version format; with --expect it must also equal VERSION.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,15 +13,17 @@ cd "$repo_root"
 # shellcheck source=scripts/lib.sh
 . "$repo_root/scripts/lib.sh"
 
-file="${1:-dist/cobblemon-$(pack_version).mrpack}"
+expect=()
+if [ "${1:-}" = "--expect" ]; then
+  [ -n "${2:-}" ] || fail "--expect needs a version"
+  is_pack_version "$2" || fail "--expect $2 is not YYYY.MM.DD-<7-character commit> or $PLACEHOLDER_VERSION"
+  expect=(--expect "$2")
+  shift 2
+fi
+file="${1:-dist/cobblemon.mrpack}"
 [ -f "$file" ] || fail "missing $file; run scripts/pack-export.sh first"
-version="$(basename "$file")"
-case "$version" in
-  cobblemon-*.mrpack) version="${version#cobblemon-}"; version="${version%.mrpack}" ;;
-  *) fail "file name must be cobblemon-<version>.mrpack: $file" ;;
-esac
 name="$(env_value SERVER_NAME)"
 host="$(env_value SERVER_PUBLIC_HOST)"
 
 docker compose --progress quiet --profile tools run --rm -T -w /work --entrypoint python3 \
-  packwiz scripts/pack-inspect.py "$file" "$version" --name "$name" --host "$host" --pack /work/pack
+  packwiz scripts/pack-inspect.py "$file" ${expect[@]+"${expect[@]}"} --name "$name" --host "$host" --pack /work/pack

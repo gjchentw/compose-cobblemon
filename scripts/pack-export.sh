@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Export the pack from pack/ to dist/cobblemon-<version>.mrpack (L2).
+# Export the pack from pack/ to dist/cobblemon.mrpack, with its version file
+# dist/cobblemon.env (only PACK_VERSION=<version>) next to it (L2).
 # The committed pack/ is copied to a fresh build directory first, so what is
-# generated at export time (the release version, servers.dat with the real
-# server host) never touches the source of truth.
+# generated at export time (the version, servers.dat with the real server
+# host) never touches the source of truth.
 #
-# Usage: scripts/pack-export.sh [X.Y.Z | X.Y.Z-rc.N]
-#   Without a version the pack is built as the 0.0.0-dev placeholder. CI passes
-#   the version of the release tag (see .github/workflows/ci.yml).
+# Usage: scripts/pack-export.sh [YYYY.MM.DD-<commit> | 0.0.0-dev]
+#   Without a version the pack is built with the version of the checked-out
+#   commit (commit_version in scripts/lib.sh).
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,31 +28,41 @@ if [ "${GITHUB_REF_TYPE:-}" = "tag" ] || [ -n "${PACK_REQUIRE_REAL_HOST:-}" ]; t
 fi
 
 if [ "$#" -ge 1 ] && [ -z "$1" ]; then
-  fail "empty version argument; pass X.Y.Z or omit it for the $PLACEHOLDER_VERSION placeholder"
+  fail "empty version argument; pass YYYY.MM.DD-<commit> or omit it for the checked-out commit's version"
 fi
-version="${1:-$(pack_version)}"
-if [ "$version" != "$PLACEHOLDER_VERSION" ] && ! is_release_version "$version"; then
-  fail "version must be X.Y.Z or X.Y.Z-rc.N, got: $version"
+if [ "$#" -ge 1 ]; then
+  version="$1"
+else
+  version="$(commit_version)"
 fi
+is_pack_version "$version" \
+  || fail "version must be YYYY.MM.DD-<7-character commit> or $PLACEHOLDER_VERSION, got: $version"
 
 mkdir -p .build dist
 # A fresh path on every run: Docker Desktop may serve stale contents for a
 # path that was deleted and recreated while the daemon still has it cached.
 build_dir="$(mktemp -d .build/pack.XXXXXX)"
 trap 'rm -rf "$build_dir"' EXIT
-cp -R pack/. "$build_dir/"
-# The release version exists only in this build copy; pack/ keeps the placeholder.
-sed -i.bak "s/^version = \".*\"$/version = \"$version\"/" "$build_dir/pack.toml"
-rm -f "$build_dir/pack.toml.bak"
-grep -q "^version = \"$version\"$" "$build_dir/pack.toml" \
+mkdir "$build_dir/pack"
+cp -R pack/. "$build_dir/pack/"
+# The version exists only in this build copy; pack/ keeps the placeholder.
+sed -i.bak "s/^version = \".*\"$/version = \"$version\"/" "$build_dir/pack/pack.toml"
+rm -f "$build_dir/pack/pack.toml.bak"
+grep -q "^version = \"$version\"$" "$build_dir/pack/pack.toml" \
   || fail "could not set version $version in the build copy of pack.toml"
 
-out="dist/cobblemon-$version.mrpack"
 run() {
-  docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir" packwiz "$@"
+  docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir/pack" packwiz "$@"
 }
-docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir" --entrypoint python3 \
-  packwiz /work/scripts/make-servers-dat.py --name "$name" --host "$host" --out servers.dat
+# The pre-filled entry carries the version, so players can compare it with the
+# version in the server's MOTD (public-server-info).
+docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir/pack" --entrypoint python3 \
+  packwiz /work/scripts/make-servers-dat.py --name "$name ($version)" --host "$host" --out servers.dat
 run refresh
-run modrinth export -o "/work/$out"
-echo "exported $out" >&2
+run modrinth export -o "/work/$build_dir/cobblemon.mrpack"
+printf 'PACK_VERSION=%s\n' "$version" > "$build_dir/cobblemon.env"
+# Both files are moved into dist/ only after the export succeeded, so a failed
+# export leaves the previous pair in dist/ as it was.
+mv "$build_dir/cobblemon.mrpack" dist/cobblemon.mrpack
+mv "$build_dir/cobblemon.env" dist/cobblemon.env
+echo "exported dist/cobblemon.mrpack and dist/cobblemon.env, version $version" >&2

@@ -8,8 +8,11 @@ data/
 backups/
 staging/
 
-# Build outputs: exported packs and the export build directory
-dist/
+# Build outputs: the export build directory and anything else in dist/.
+# The published pack and its version file are tracked; only CI commits them.
+dist/*
+!dist/cobblemon.mrpack
+!dist/cobblemon.env
 .build/
 
 # Logs, caches and OS noise
