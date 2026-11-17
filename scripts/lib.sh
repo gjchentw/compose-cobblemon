@@ -6,10 +6,29 @@
 log() { printf '%s\n' "$*" >&2; }
 fail() { log "FAIL: $*"; exit 1; }
 
-# The only version git ever holds; a release version exists only in a tag and
-# in the pack built for it.
+# The only version the sources in git hold; a built pack carries the version
+# of the commit it was built from (commit_version).
 # shellcheck disable=SC2034  # used by the scripts that source this file
 PLACEHOLDER_VERSION="0.0.0-dev"
+
+# is_pack_version VERSION: true for a commit version, YYYY.MM.DD-<7 lowercase
+# hex characters>, and for the placeholder (the whole string, not any one line
+# of it).
+is_pack_version() {
+  local re='^[0-9]{4}\.(0[1-9]|1[0-2])\.(0[1-9]|[12][0-9]|3[01])-[0-9a-f]{7}$'
+  [ "$1" = "$PLACEHOLDER_VERSION" ] || [[ "$1" =~ $re ]]
+}
+
+# commit_version [REV]: the pack version of a commit (default HEAD): its
+# committer date in UTC and the first seven characters of its hash, for
+# example 2026.11.17-dbb7da6. Use as `v="$(commit_version)"`, like pack_version.
+commit_version() {
+  local rev="${1:-HEAD}" line
+  line="$(TZ=UTC0 git log -1 --format='%cd %H' --date=format-local:'%Y.%m.%d' "$rev" 2>/dev/null)" \
+    || fail "cannot read commit $rev; run inside a git checkout"
+  [ -n "$line" ] || fail "cannot read commit $rev; run inside a git checkout"
+  printf '%s-%s\n' "${line%% *}" "$(printf '%s' "${line#* }" | cut -c1-7)"
+}
 
 # is_release_version VERSION: true for X.Y.Z and X.Y.Z-rc.N (the whole string,
 # not any one line of it).

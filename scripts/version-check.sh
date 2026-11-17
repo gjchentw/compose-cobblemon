@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Assert the git side of the version contract: git holds only the placeholder
-# version (the release version lives in the tag), and a release tag is well formed.
+# Assert the git side of the version contract: the sources hold only the
+# placeholder version (a built pack carries the version of its commit), and a
+# given pack version is well formed.
 #
-# Usage: scripts/version-check.sh [vX.Y.Z | vX.Y.Z-rc.N]
-#   Without an argument the tag is taken from GITHUB_REF_NAME when the workflow
-#   runs for a tag. When a tag is known, its version (without the "v") is
-#   printed on stdout for the caller to pass to scripts/pack-export.sh.
+# Usage: scripts/version-check.sh [VERSION]
+#   VERSION is YYYY.MM.DD-<7-character commit>, or the placeholder. When it is
+#   given and well formed it is printed on stdout.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -16,21 +16,15 @@ cd "$repo_root"
 pack_v="$(pack_version)"
 env_v="$(sed -n 's/^PACK_VERSION=\(.*\)$/\1/p' .env.example)"
 [ "$pack_v" = "$PLACEHOLDER_VERSION" ] \
-  || fail "pack/pack.toml version is $pack_v; git must hold only $PLACEHOLDER_VERSION (the tag carries the release version)"
+  || fail "pack/pack.toml version is $pack_v; git must hold only $PLACEHOLDER_VERSION (export substitutes the commit's version)"
 [ "$env_v" = "$PLACEHOLDER_VERSION" ] \
   || fail ".env.example PACK_VERSION is $env_v; git must hold only $PLACEHOLDER_VERSION"
 
-tag="${1:-}"
-if [ -z "$tag" ] && [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
-  tag="${GITHUB_REF_NAME:-}"
-fi
-if [ -n "$tag" ]; then
-  version="${tag#v}"
-  if [ "$version" = "$tag" ] || ! is_release_version "$version"; then
-    fail "tag $tag is not vX.Y.Z or vX.Y.Z-rc.N"
-  fi
-  printf '%s\n' "$version"
-  log "VERSION OK: tag $tag builds pack $version"
+if [ "$#" -gt 0 ]; then
+  is_pack_version "$1" \
+    || fail "version $1 is not YYYY.MM.DD-<7-character commit> or $PLACEHOLDER_VERSION"
+  printf '%s\n' "$1"
+  log "VERSION OK: $1 is a pack version; git holds only the placeholder $PLACEHOLDER_VERSION"
 else
   log "VERSION OK: git holds only the placeholder $PLACEHOLDER_VERSION"
 fi
