@@ -123,3 +123,8 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Acceptance: `pack/options.txt` starts with `version:3955`; a fresh profile installed from the pack keeps `key_gui.xaero_open_map` on V after the game runs (reproduced: without the line it reverted to M, with it it stayed V); `pack-inspect.py` rejects an options.txt without the line
   - Verify: `scripts/pack-export.sh && scripts/pack-inspect.sh`; `git diff --exit-code pack/` after refresh; fresh-profile test with the exported pack
   - Files: `pack/options.txt`, `pack/index.toml`, `pack/pack.toml`, `scripts/pack-inspect.py`, `docs/upgrade.md`, `SPEC.md`, `tasks/todo.md`
+
+- [x] Task 21: AGENTS.md matches the repository (requested by the human, 2026-11-17)
+  - Acceptance: the overview lists `pack/` and CI; the verification ladder has five levels named after the real scripts; Always, Ask first and Never agree with `SPEC.md` Boundaries; releases are described as GitHub releases the human publishes
+  - Verify: `scripts/lint.sh`; every path named in AGENTS.md exists; side-by-side check against `SPEC.md` Boundaries
+  - Files: `AGENTS.md`, `tasks/todo.md`

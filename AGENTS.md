@@ -7,12 +7,14 @@ Guidance for AI coding agents (Claude Code, Cursor, Copilot, OpenCode, etc.) and
 `compose-cobblemon` is a Docker Compose project. It contains only infrastructure artifacts:
 
 - `compose.yaml` and the `compose.staging.yaml` override (the server runs a pinned upstream image)
+- `pack/` — the packwiz pack, the single source of truth for the client pack and the server's mod set
 - `tools/packwiz/Dockerfile` — the pack tooling image
 - Settings and templates (`.env.example`, `config/`)
 - Helper scripts (`scripts/`)
+- CI (`.github/workflows/ci.yml`): checks on every push, and the pack build when a GitHub release is published
 - Documentation (`README.md`, `SPEC.md`, `tasks/`, `docs/`)
 
-There is no application code. "Tests" here are validation, build, smoke and persistence checks, not unit tests.
+There is no application code. "Tests" here are lint and config validation, pack inspection, smoke and persistence checks, and a gameplay checklist run by people, not unit tests.
 
 ## Language Policy
 
@@ -110,14 +112,17 @@ Harnesses without slash commands invoke the skill by name and follow the same ph
 
 ## Verification Ladder
 
-The exact commands live in the `Commands` section of `SPEC.md`. The ladder has four levels; each task's `Verify` line names which levels it must pass.
+The exact commands live in the `Commands` section of `SPEC.md`. The ladder has five levels, four automated and one run by people; each task's `Verify` line names which levels it must pass.
 
 | Level | Check | Typical means |
 |---|---|---|
-| L1 Static | Compose file is valid, Dockerfile and YAML lint clean | `docker compose config`, Dockerfile linter, YAML linter |
-| L2 Build | Image builds | `docker compose build` |
-| L3 Smoke | Stack starts, becomes healthy within the timeout, the server port answers | smoke script |
-| L4 Persistence | Stack is stopped and restarted, data survives | down, up, check |
+| L1 Static | Both compose file sets are valid; Dockerfile, YAML, shell, workflow and Python lint clean; `packwiz refresh` leaves `pack/` unchanged | `scripts/lint.sh`, `docker compose config -q` |
+| L2 Build | The tools image builds; the pack exports and passes inspection; git holds only the placeholder version | `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/version-check.sh` |
+| L3 Smoke | The checkout, the pack file and `PACK_VERSION` name the same release; the stack becomes healthy within the timeout; the server-side mod set is exact; the port answers; RCON is not published | `scripts/smoke.sh` |
+| L4 Persistence | The stack stops in order and restarts with the world intact; the newest backup restores | `scripts/persist-test.sh`, `scripts/restore-drill.sh` |
+| L5 Acceptance | Players complete the gameplay checklist on staging, then on production, before a release | `docs/acceptance-checklist.md` |
+
+CI runs L1 and L2 on every push. L3 and L4 run on a hosted Linux runner on manual dispatch or when a `smoke/*` branch is pushed.
 
 Test-driven development applies to infrastructure in this form:
 
@@ -132,13 +137,14 @@ A task is not done until its named levels pass and the output is shown to the hu
 **Always**
 
 - Follow the SDD cycle above; every change maps to a task in `tasks/todo.md`.
-- Run the verification ladder before every commit.
-- Pin every image tag and every mod and loader version.
+- Run L1 and L2 before every commit, plus every level the task's `Verify` line names; run L3 and L4 before every release.
+- Pin every image by tag and multi-arch digest, and every mod and loader version in `pack/`.
 - Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder.
 - Write in English in every committed file, except `docs/player-guide.zh-TW.md`.
 
 **Ask first**
 
+- Adding or removing a mod in `pack/`.
 - Adding, removing or renaming a service.
 - Changing port mappings, volume mappings or the base image.
 - Bumping a pinned version.
@@ -149,8 +155,11 @@ A task is not done until its named levels pass and the output is shown to the hu
 **Never**
 
 - Commit `.env`, secrets, tokens or RCON passwords.
-- Commit runtime data (world saves, logs, caches).
+- Commit runtime data or build output (world saves, backups, staging copies, `dist/`, logs, caches).
+- Commit a release version to `pack/pack.toml` or `.env.example`: the git tag is the release version (`SPEC.md` decision 10, `docs/adr/0004-git-tag-is-the-release-version.md`).
 - Use `latest` or any floating tag.
+- Publish the RCON port, or turn off online mode or the whitelist.
+- Hand-edit packwiz-generated files, other than `pack.toml` and a mod's `side` field followed by `packwiz refresh`.
 - Skip or self-approve a gate.
 - Touch files outside the current task's `Files` list.
 - Remove or weaken a check to make it pass.
@@ -166,3 +175,4 @@ A task is not done until its named levels pass and the output is shown to the hu
 - Work on a branch unless the human says otherwise.
 - One commit per completed task, in English, referencing the task.
 - Commit `SPEC.md` and `tasks/` changes together with the files they describe.
+- A release is a GitHub release published with a new tag `vX.Y.Z` or `vX.Y.Z-rc.N`; CI builds the pack and attaches it. Publishing is the human's call: the agent prepares the release note and the link, and the human publishes.
