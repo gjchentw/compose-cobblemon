@@ -4,7 +4,7 @@ Each task checks the requirements of one capability against the repository as it
 
 ## 1. compose-services
 
-- [ ] 1.1 Render the production and the staging configurations and confirm the pinning, server-side install, game-settings defaults, public-information, access-control, RCON, secret, health, graceful-stop, log-rotation and ownership requirements against `compose.yaml`, `compose.staging.yaml` and `.env.example`; record any correction in the spec (verify: L1)
+- [x] 1.1 Render the production and the staging configurations and confirm the pinning, server-side install, game-settings defaults, public-information, access-control, RCON, secret, health, graceful-stop, log-rotation and ownership requirements against `compose.yaml`, `compose.staging.yaml` and `.env.example`; record any correction in the spec (verify: L1)
 - [ ] 1.2 Run `scripts/smoke.sh`, `scripts/persist-test.sh` and `scripts/restore-drill.sh` on the local stack and confirm the smoke, persistence, backup and restore requirements, including the pack-version and checkout checks refusing a mismatch (verify: L3, L4)
 - [ ] 1.3 Compare the rendered staging and production configurations, run `scripts/staging-clone-world.sh` with production running, and confirm the staging and clone requirements (verify: L1, L4)
 - [ ] 1.4 Confirm the hosted Linux verification requirement from the latest `smoke/*` run and the administrator-documentation and rollback requirements against `docs/admin-guide.md`, `docs/upgrade.md` and `docs/rollback.md` (verify: L1, L3, L4)

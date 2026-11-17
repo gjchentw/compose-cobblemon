@@ -7,11 +7,11 @@ Runs a Minecraft game server from a pack under Docker Compose on one Linux host,
 ## ADDED Requirements
 
 ### Requirement: Pinned images
-Every container image the stack runs SHALL be referenced by tag and by multi-arch index digest covering linux/amd64 and linux/arm64. Floating tags such as `latest` or `stable` SHALL NOT be used.
+Every container image the stack pulls from a registry SHALL be referenced by tag and by multi-arch index digest covering linux/amd64 and linux/arm64. Floating tags such as `latest` or `stable` SHALL NOT be used. Images built locally from a Dockerfile are exempt; their base images are pinned instead.
 
-#### Scenario: Rendered configuration pins every image
+#### Scenario: Rendered configuration pins every pulled image
 - **WHEN** the production or the staging configuration is rendered with `docker compose config`
-- **THEN** every `image:` reference carries a version tag and an `@sha256:` digest
+- **THEN** every `image:` reference that is pulled carries a version tag and an `@sha256:` digest
 
 ### Requirement: Server installs the server side of the configured pack
 The main game service SHALL install the pack file named by the configured pack version from the local pack directory, installing only the entries marked for the server and none of the client-only override files.
