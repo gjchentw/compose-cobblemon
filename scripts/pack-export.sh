@@ -37,6 +37,11 @@ else
 fi
 is_pack_version "$version" \
   || fail "version must be YYYY.MM.DD-<7-character commit> or $PLACEHOLDER_VERSION, got: $version"
+# Compose interpolates all of compose.yaml before it runs the tools container,
+# including the server's required PACK_VERSION. Supply the version being built
+# (the environment wins over env files), so export also works in a checkout
+# that has no dist/cobblemon.env yet.
+export PACK_VERSION="$version"
 
 mkdir -p .build dist
 # A fresh path on every run: Docker Desktop may serve stale contents for a
