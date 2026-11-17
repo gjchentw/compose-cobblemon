@@ -109,9 +109,10 @@ scripts/                  lint, pack-export, pack-inspect, version-check, smoke,
                           restore-drill, staging-clone-world, ci-env
 docs/                     guides, SOPs, checklist, adr/
 .github/workflows/ci.yml  L1 + L2 on push; pack build on a published release; L3/L4 on dispatch
-SPEC.md                   what this repo builds and how it is verified
+openspec/                 OpenSpec specs and changes; all new work starts here as a change
+SPEC.md                   what this repo builds and how it is verified (until the OpenSpec baseline replaces it)
 AGENTS.md                 how AI agents and humans collaborate here
-tasks/                    implementation plan and task list
+tasks/                    plan and task list of the 1.0.x work, frozen
 ```
 
 Runtime directories (`data/`, `backups/`, `staging/`, `dist/`, `.env`) are never committed.

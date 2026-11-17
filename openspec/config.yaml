@@ -1,0 +1,18 @@
+schema: spec-driven
+
+# Project constraints that guide every OpenSpec artifact and operation.
+# The collaboration rules themselves live in AGENTS.md.
+context: |
+  Write every artifact in English: it is committed to the repository (AGENTS.md, Language Policy).
+  This is a Docker Compose infrastructure repository with no application code. Verification is the
+  five-level ladder in AGENTS.md (L1 static, L2 build, L3 smoke, L4 persistence, L5 human
+  acceptance), not unit tests.
+
+rules:
+  tasks:
+    - 'End every task with the verification levels it must pass, for example "(verify: L1, L2)".'
+
+operations:
+  apply:
+    guidance:
+      - 'Before checking off a task, run every verification level it names and show the output to the human.'

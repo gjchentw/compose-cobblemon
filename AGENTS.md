@@ -12,13 +12,14 @@ Guidance for AI coding agents (Claude Code, Cursor, Copilot, OpenCode, etc.) and
 - Settings and templates (`.env.example`, `config/`)
 - Helper scripts (`scripts/`)
 - CI (`.github/workflows/ci.yml`): checks on every push, and the pack build when a GitHub release is published
+- `openspec/` — the OpenSpec specs (`openspec/specs/`) and changes (`openspec/changes/`); the workflow skills live in `.claude/skills/` and `.agents/skills/`
 - Documentation (`README.md`, `SPEC.md`, `tasks/`, `docs/`)
 
 There is no application code. "Tests" here are lint and config validation, pack inspection, smoke and persistence checks, and a gameplay checklist run by people, not unit tests.
 
 ## Language Policy
 
-- Everything committed to this repository is written in English: documentation, `SPEC.md`, task files, ADRs, comments in Dockerfiles, Compose files and scripts, commit messages and PR descriptions.
+- Everything committed to this repository is written in English: documentation, OpenSpec artifacts (proposals, specs, designs, task lists), ADRs, comments in Dockerfiles, Compose files and scripts, commit messages and PR descriptions.
 - Conversation between the agent and the human may be in whatever language the human uses. Questions, answers and discussion are not bound by the English rule; written artifacts are.
 - When the human gives input in another language, the agent translates it into English before recording it in any file.
 - One exception, decided 2026-11-03: `docs/player-guide.zh-TW.md` is a Traditional Chinese copy of `docs/player-guide.md` for players. The English file is the primary version; any task that changes one changes both.
@@ -48,7 +49,7 @@ The default mode of communication is the agent asking the human. The agent does 
 
    Batch questions only when they are independent and there are three or fewer.
 
-3. **Stop on confusion.** If the spec, the task list and the existing files disagree, name the conflict and ask which takes precedence. Do not pick one silently.
+3. **Stop on confusion.** If the specs, the change artifacts and the existing files disagree, name the conflict and ask which takes precedence. Do not pick one silently.
 
 4. **Push back when warranted.** State the concrete downside, propose an alternative, then accept the human's decision.
 
@@ -58,61 +59,58 @@ The default mode of communication is the agent asking the human. The agent does 
 
 ### Human responsibilities
 
-- Answer the agent's questions and resolve `Open Questions` in `SPEC.md`.
-- Review and approve each gate artifact: `SPEC.md`, `tasks/plan.md`, `tasks/todo.md`, and each task's verification result.
+- Answer the agent's questions and settle the open points a change's proposal or design raises.
+- Review and approve each gate: the change's artifacts after propose, each task's verification result during apply, and the archive.
 - Make the calls listed under "Ask first" in the Boundaries section.
 
 ### What the agent may decide alone
 
-Routine judgment calls inside an already-approved task: naming, ordering of YAML keys, comment wording, script structure. Anything that changes behaviour, scope, versions, ports, volumes or services is not routine and goes back to the human.
+Routine judgment calls inside an already-approved change: naming, ordering of YAML keys, comment wording, script structure. Anything that changes behaviour, scope, versions, ports, volumes or services is not routine and goes back to the human.
 
-## Mandatory Workflow: Spec-Driven Development with agent-skills
+## Mandatory Workflow: OpenSpec
 
-All work in this repository follows the SDD cycle from the `agent-skills` plugin. No file is created or changed outside of this cycle, except typo-level fixes the human explicitly asks for.
+All work in this repository goes through an OpenSpec change. No file is created or changed outside a change, except typo-level fixes the human explicitly asks for.
 
 ```
-SPECIFY ──→ PLAN ──→ TASKS ──→ IMPLEMENT ──→ REVIEW ──→ SHIP
-  gate        gate      gate      per task      gate      gate
+EXPLORE ──→ PROPOSE ──→ APPLY ──→ ARCHIVE
+optional      gate      per task     gate
 ```
 
-Every gate requires human approval before moving on.
-
-| Phase | Claude Code command | Skill | Artifact | Gate |
+| Phase | Skill | CLI | Artifact | Gate |
 |---|---|---|---|---|
-| Specify | `/agent-skills:spec` | `spec-driven-development` | `SPEC.md` | Human approves the spec |
-| Plan | `/agent-skills:plan` | `planning-and-task-breakdown` | `tasks/plan.md` | Human approves the approach |
-| Tasks | `/agent-skills:plan` | `planning-and-task-breakdown` | `tasks/todo.md` | Human approves the task list |
-| Implement | `/agent-skills:build` | `incremental-implementation` + `test-driven-development` | one commit per task | Verification ladder passes |
-| Review | `/agent-skills:review` | `code-review-and-quality` | review report | Human accepts or requests changes |
-| Simplify | `/agent-skills:code-simplify` | `code-simplification` | reduced diff | Behaviour unchanged, checks still pass |
-| Ship | `/agent-skills:ship` | `shipping-and-launch` | GO / NO-GO with rollback plan | Human makes the ship decision |
+| Explore | `openspec-explore` | `openspec list`, `openspec show` | none: thinking only, nothing is written without the human's confirmation | none |
+| Propose | `openspec-propose` | `openspec new change <name>`, `openspec status --change <name>`, `openspec validate <name>` | `openspec/changes/<name>/`: `proposal.md`, delta specs in `specs/<capability>/spec.md`, `design.md`, `tasks.md` | Human approves the change; nothing is implemented before that |
+| Apply | `openspec-apply-change` | `openspec instructions apply --change <name>` | the code and docs the tasks call for; each finished task checked off in `tasks.md` | Each task's verification levels pass and the output is shown to the human |
+| Archive | `openspec-archive-change` | `openspec archive <name>` | delta specs merged into `openspec/specs/`; the change moved to `openspec/changes/archive/` | Human approves the archive |
 
-Supporting skills, applied when their trigger matches:
+`openspec-sync-specs` merges a change's delta specs into the main specs before archiving when the human wants them in place early. Harnesses without the skills run the CLI directly and follow the same phases; `openspec instructions <artifact> --change <name>` prints the rules and template for each artifact.
 
-- `interview-me` — when the ask is missing who, why, success criteria or the binding constraint. Use before `/spec` if needed.
-- `source-driven-development` — verify Docker, Compose and upstream image behaviour against official documentation before relying on it.
-- `debugging-and-error-recovery` — whenever a build, validation or smoke check fails unexpectedly.
-- `documentation-and-adrs` — record architectural decisions (base image choice, mod delivery strategy, volume layout) in `docs/adr/`.
-- `git-workflow-and-versioning` — commit and branch hygiene.
-- `security-and-hardening` — anything touching secrets, exposed ports, privileges or user IDs in containers.
+Rules for changes:
 
-Harnesses without slash commands invoke the skill by name and follow the same phase order.
+- A change has a kebab-case name that says what it does, for example `bump-cobblemon-1-9`.
+- Propose plans and stops. Apply starts only when the human asks for it.
+- A change that alters no requirement (docs, tooling, a refactor) sets `skip_specs: true` in its `.openspec.yaml` instead of inventing a requirement.
+- Decisions, with the alternatives considered, are recorded in the change's `design.md`.
+- Every task in `tasks.md` names the verification levels it must pass (see below).
+- `openspec validate <name>` passes before the change is presented at the propose gate and before archiving.
+- New work is never added silently: a task that turns out to be needed is added to `tasks.md` and shown to the human.
 
 ### Phase detection at session start
 
-1. Read this file, then `SPEC.md` and `tasks/todo.md` if they exist.
-2. If there is no `SPEC.md`, start at Specify. If there is a spec but no `tasks/`, start at Plan. If there are unchecked tasks, continue at Implement with the next one.
+1. Read this file, then run `openspec list` (active changes) and `openspec list --specs`.
+2. If an active change has unchecked tasks, continue applying it. If it has incomplete artifacts, continue proposing it. Otherwise wait for a new request.
 3. Confirm the detected phase with the human before doing anything else.
 
-### Keeping the spec alive
+### Specs and the transition from SPEC.md
 
-- A decision that changes versions, structure, services or scope is written into `SPEC.md` first, then implemented.
-- `tasks/todo.md` is updated as tasks complete. Tasks are never silently added; new work goes through the human.
-- `SPEC.md`, `tasks/` and ADRs are committed alongside the files they describe.
+- `openspec/specs/` is the source of truth for what the system must do. Changes carry delta specs; archiving merges them.
+- Until the baseline specs are written and archived, `SPEC.md` describes the current behaviour and the decisions behind it. The baseline is written with the human, who first settles the boundaries between capabilities; `SPEC.md` is removed once it is archived.
+- `tasks/` is the record of the 1.0.x work done before OpenSpec (Tasks 1 to 22). It receives no new tasks.
+- A decision that changes versions, structure, services or scope goes into a change's proposal and design first, then is implemented.
 
 ## Verification Ladder
 
-The exact commands live in the `Commands` section of `SPEC.md`. The ladder has five levels, four automated and one run by people; each task's `Verify` line names which levels it must pass.
+The ladder has five levels, four automated and one run by people. Each task in a change's `tasks.md` names which levels it must pass.
 
 | Level | Check | Typical means |
 |---|---|---|
@@ -136,8 +134,8 @@ A task is not done until its named levels pass and the output is shown to the hu
 
 **Always**
 
-- Follow the SDD cycle above; every change maps to a task in `tasks/todo.md`.
-- Run L1 and L2 before every commit, plus every level the task's `Verify` line names; run L3 and L4 before every release.
+- Follow the OpenSpec workflow above; every commit maps to a task in an approved change's `tasks.md`.
+- Run L1 and L2 before every commit, plus every level the task names; run L3 and L4 before every release.
 - Pin every image by tag and multi-arch digest, and every mod and loader version in `pack/`.
 - Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder.
 - Write in English in every committed file, except `docs/player-guide.zh-TW.md`.
@@ -161,7 +159,7 @@ A task is not done until its named levels pass and the output is shown to the hu
 - Publish the RCON port, or turn off online mode or the whitelist.
 - Hand-edit packwiz-generated files, other than `pack.toml` and a mod's `side` field followed by `packwiz refresh`.
 - Skip or self-approve a gate.
-- Touch files outside the current task's `Files` list.
+- Touch files the current change's tasks do not call for.
 - Remove or weaken a check to make it pass.
 
 ## Scope and Simplicity
@@ -173,6 +171,6 @@ A task is not done until its named levels pass and the output is shown to the hu
 ## Git Conventions
 
 - Work on a branch unless the human says otherwise.
-- One commit per completed task, in English, referencing the task.
-- Commit `SPEC.md` and `tasks/` changes together with the files they describe.
+- One commit per completed task, in English, naming the change and the task number (for example `bump-cobblemon-1-9 2.1`).
+- Commit a change's artifacts, including the checked-off `tasks.md`, together with the files they describe; archiving is its own commit.
 - A release is a GitHub release published with a new tag `vX.Y.Z` or `vX.Y.Z-rc.N`; CI builds the pack and attaches it. Publishing is the human's call: the agent prepares the release note and the link, and the human publishes.

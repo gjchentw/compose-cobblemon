@@ -128,3 +128,10 @@ Branch `feat/cobblemon-1.0.0`. One commit per task. Details, dependencies and ch
   - Acceptance: the overview lists `pack/` and CI; the verification ladder has five levels named after the real scripts; Always, Ask first and Never agree with `SPEC.md` Boundaries; releases are described as GitHub releases the human publishes
   - Verify: `scripts/lint.sh`; every path named in AGENTS.md exists; side-by-side check against `SPEC.md` Boundaries
   - Files: `AGENTS.md`, `tasks/todo.md`
+
+- [x] Task 22: Replace the agent-skills SDD cycle in AGENTS.md with the OpenSpec workflow (requested by the human, 2026-11-17)
+  - Acceptance: AGENTS.md describes explore, propose, apply and archive with human gates after propose, per task during apply, and before archive; no agent-skills reference remains; the verification ladder and RED/GREEN are kept; the transition is stated (SPEC.md stays the reference until the baseline specs, written with the human, are archived; tasks/ is frozen); openspec/, .claude/skills and .agents/skills are committed; openspec/config.yaml injects the English rule, the per-task verification rule and the apply guidance; README lists openspec/
+  - Verify: L1 (`scripts/lint.sh`); every path AGENTS.md names exists; `openspec context` reports no config warning; a throwaway change shows the injected context, rule and guidance
+  - Files: `AGENTS.md`, `openspec/config.yaml`, `openspec/`, `.claude/skills/`, `.agents/skills/`, `README.md`, `tasks/todo.md`
+
+This is the last entry in tasks/: from here on, work is planned and tracked in OpenSpec changes (see AGENTS.md).
