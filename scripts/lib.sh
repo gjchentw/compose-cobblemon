@@ -56,6 +56,22 @@ check_release_checkout() {
   fi
 }
 
+# The environment files Compose reads, as the administrator's shell has them:
+# COMPOSE_ENV_FILES=.env,dist/cobblemon.env (dist/cobblemon.env holds only
+# PACK_VERSION; the later file wins). When the caller has not set it, use the
+# same list, keeping only the files that exist: Compose refuses a listed file
+# that is missing, and dist/cobblemon.env does not exist before the first
+# export or publish. Relative paths resolve from the working directory, the
+# repository root for every script.
+if [ -z "${COMPOSE_ENV_FILES:-}" ]; then
+  _env_files=""
+  for _f in .env dist/cobblemon.env; do
+    if [ -f "$_f" ]; then _env_files="${_env_files:+$_env_files,}$_f"; fi
+  done
+  [ -z "$_env_files" ] || export COMPOSE_ENV_FILES="$_env_files"
+  unset _env_files _f
+fi
+
 # pack_version: the version field of pack/pack.toml (the placeholder, by contract).
 # Use as `v="$(pack_version)"`: the fail inside the substitution aborts the
 # caller through the assignment's exit status under set -e.
@@ -67,17 +83,25 @@ pack_version() {
 }
 
 # env_value KEY
-# Prints KEY from the environment, else from .env, else from .env.example.
+# Prints KEY as Compose resolves it: from the environment, else from the files
+# in COMPOSE_ENV_FILES with the later file winning (so PACK_VERSION comes from
+# dist/cobblemon.env), else from .env.example.
 # Not for UID or GID: bash's own read-only UID always wins; use id -u / id -g.
 # The value is everything after the first '=', with one pair of surrounding
 # quotes removed, which matches how docker compose reads .env files.
 env_value() {
-  local key="$1" file line
+  local key="$1" file line i files=() order=()
   if [ -n "${!key:-}" ]; then
     printf '%s\n' "${!key}"
     return 0
   fi
-  for file in .env .env.example; do
+  IFS=, read -r -a files <<< "${COMPOSE_ENV_FILES:-.env}"
+  i=${#files[@]}
+  while [ "$i" -gt 0 ]; do
+    i=$((i - 1))
+    order+=("${files[$i]}")
+  done
+  for file in ${order[@]+"${order[@]}"} .env.example; do
     [ -f "$file" ] || continue
     line="$(grep -E "^${key}=" "$file" | tail -n 1 || true)"
     if [ -n "$line" ]; then
@@ -90,7 +114,7 @@ env_value() {
       return 0
     fi
   done
-  echo "missing $key in the environment, .env and .env.example" >&2
+  echo "missing $key in the environment, ${COMPOSE_ENV_FILES:-.env} and .env.example" >&2
   return 1
 }
 

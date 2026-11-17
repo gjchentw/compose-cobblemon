@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Write .env for a CI job from .env.example: the runner's uid/gid, a random
-# RCON password, and any overrides given as KEY=VALUE arguments.
+# RCON password, and any overrides given as KEY=VALUE arguments. When
+# dist/cobblemon.env is missing (no pack published yet), write it with the
+# checked-out commit's version, so Compose has a PACK_VERSION to render.
 #
 # Usage: scripts/ci-env.sh [KEY=VALUE ...]
 #   scripts/ci-env.sh MEMORY=4G PAUSE_IF_NO_PLAYERS=false
@@ -31,3 +33,8 @@ for kv in "$@"; do
   set_var "${kv%%=*}" "${kv#*=}"
 done
 grep -E '^(UID|GID|MEMORY|PAUSE_IF_NO_PLAYERS)=' .env >&2
+if [ ! -f dist/cobblemon.env ]; then
+  mkdir -p dist
+  printf 'PACK_VERSION=%s\n' "$(commit_version)" > dist/cobblemon.env
+  log "wrote dist/cobblemon.env: $(cat dist/cobblemon.env)"
+fi

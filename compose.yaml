@@ -25,14 +25,15 @@ services:
       GID: "${GID:-1000}"
       # --- pack: the same mrpack players install, server side only ---
       TYPE: "MODRINTH"
-      MODRINTH_MODPACK: "/packs/cobblemon-${PACK_VERSION:?set PACK_VERSION in .env}.mrpack"
+      MODRINTH_MODPACK: "/packs/cobblemon.mrpack"
       MODRINTH_OVERRIDES_EXCLUSIONS: "options.txt,servers.dat"   # client-only override files
       # --- JVM ---
       MEMORY: "${MEMORY:-6G}"
       USE_AIKAR_FLAGS: "true"
       # --- gameplay ---
       SERVER_NAME: "${SERVER_NAME:-Cobblemon Server}"
-      MOTD: "${SERVER_NAME:-Cobblemon Server} | Pack ${PACK_VERSION}"
+      # PACK_VERSION comes from dist/cobblemon.env, committed by CI with the pack.
+      MOTD: "${SERVER_NAME:-Cobblemon Server} | Pack ${PACK_VERSION:?comes from dist/cobblemon.env; export COMPOSE_ENV_FILES=.env,dist/cobblemon.env (README)}"
       MAX_PLAYERS: "${MAX_PLAYERS:-12}"
       VIEW_DISTANCE: "${VIEW_DISTANCE:-10}"
       SIMULATION_DISTANCE: "${SIMULATION_DISTANCE:-6}"
