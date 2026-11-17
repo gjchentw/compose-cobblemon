@@ -17,7 +17,7 @@
 ## 3. Branch acceptance on staging
 
 - [x] 3.1 Give `scripts/staging-clone-world.sh` an option naming the production checkout, so that run from a worktree it pauses production's saves and copies production's world (verify: L1)
-- [ ] 3.2 Rehearse the procedure on this machine: add a worktree of a test branch, copy `.env`, build the branch's pack and version file, clone the world from the production checkout, run the staging stack and its smoke, persistence and restore checks from the worktree, then remove the worktree; stop production meanwhile if the Docker VM cannot hold both (verify: L3, L4)
+- [x] 3.2 Rehearse the procedure on this machine: add a worktree of a test branch, copy `.env`, build the branch's pack and version file, clone the world from the production checkout, run the staging stack and its smoke, persistence and restore checks from the worktree, then remove the worktree; stop production meanwhile if the Docker VM cannot hold both (verify: L3, L4)
 - [ ] 3.3 Rewrite `docs/upgrade.md` around branch acceptance, publish on merge and a production `git pull` that brings the version file; update `docs/rollback.md` to revert on `main` or check out an earlier commit; update `docs/acceptance-checklist.md` to staging before the merge and production after the deployment (verify: L1)
 
 ## 4. CI
