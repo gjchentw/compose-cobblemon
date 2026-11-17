@@ -110,7 +110,6 @@ scripts/                  lint, pack-export, pack-inspect, version-check, smoke,
 docs/                     guides, SOPs, checklist, adr/
 .github/workflows/ci.yml  L1 + L2 on push; pack build on a published release; L3/L4 on dispatch
 openspec/                 OpenSpec specs and changes; all new work starts here as a change
-SPEC.md                   what this repo builds and how it is verified (until the OpenSpec baseline replaces it)
 AGENTS.md                 how AI agents and humans collaborate here
 tasks/                    plan and task list of the 1.0.x work, frozen
 ```

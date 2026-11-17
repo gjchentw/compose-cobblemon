@@ -13,7 +13,7 @@ Guidance for AI coding agents (Claude Code, Cursor, Copilot, OpenCode, etc.) and
 - Helper scripts (`scripts/`)
 - CI (`.github/workflows/ci.yml`): checks on every push, and the pack build when a GitHub release is published
 - `openspec/` — the OpenSpec specs (`openspec/specs/`) and changes (`openspec/changes/`); the workflow skills live in `.claude/skills/` and `.agents/skills/`
-- Documentation (`README.md`, `SPEC.md`, `tasks/`, `docs/`)
+- Documentation (`README.md`, `docs/`, and `tasks/`, the record of the work before OpenSpec)
 
 There is no application code. "Tests" here are lint and config validation, pack inspection, smoke and persistence checks, and a gameplay checklist run by people, not unit tests.
 
@@ -101,10 +101,10 @@ Rules for changes:
 2. If an active change has unchecked tasks, continue applying it. If it has incomplete artifacts, continue proposing it. Otherwise wait for a new request.
 3. Confirm the detected phase with the human before doing anything else.
 
-### Specs and the transition from SPEC.md
+### Specs
 
 - `openspec/specs/` is the source of truth for what the system must do. Changes carry delta specs; archiving merges them.
-- Until the baseline specs are written and archived, `SPEC.md` describes the current behaviour and the decisions behind it. The baseline is written with the human, who first settles the boundaries between capabilities; `SPEC.md` is removed once it is archived.
+- There are four capabilities: `compose-services`, `mrpack-distribution`, `game-requirements` and `public-server-info`. The rules that separate them (mechanisms apart from values, game values versus operational defaults, secrets never in specs) are in the `design.md` of the archived `establish-baseline-specs` change. A new requirement goes to the capability whose rule it matches.
 - `tasks/` is the record of the 1.0.x work done before OpenSpec (Tasks 1 to 22). It receives no new tasks.
 - A decision that changes versions, structure, services or scope goes into a change's proposal and design first, then is implemented.
 
@@ -154,7 +154,7 @@ A task is not done until its named levels pass and the output is shown to the hu
 
 - Commit `.env`, secrets, tokens or RCON passwords.
 - Commit runtime data or build output (world saves, backups, staging copies, `dist/`, logs, caches).
-- Commit a release version to `pack/pack.toml` or `.env.example`: the git tag is the release version (`SPEC.md` decision 10, `docs/adr/0004-git-tag-is-the-release-version.md`).
+- Commit a release version to `pack/pack.toml` or `.env.example`: the git tag is the release version (`mrpack-distribution` spec, `docs/adr/0004-git-tag-is-the-release-version.md`).
 - Use `latest` or any floating tag.
 - Publish the RCON port, or turn off online mode or the whitelist.
 - Hand-edit packwiz-generated files, other than `pack.toml` and a mod's `side` field followed by `packwiz refresh`.

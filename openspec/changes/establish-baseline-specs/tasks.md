@@ -29,7 +29,7 @@ Each task checks the requirements of one capability against the repository as it
 ## 5. Retire SPEC.md
 
 - [x] 5.1 Run `openspec validate establish-baseline-specs --strict` and fix every finding (verify: L1)
-- [ ] 5.2 Remove `SPEC.md` and update `AGENTS.md` and `README.md` so nothing outside `tasks/` and this change refers to it, confirmed with a repository-wide search (verify: L1)
+- [x] 5.2 Remove `SPEC.md` and update `AGENTS.md` and `README.md` so nothing outside `tasks/` and this change refers to it, confirmed with a repository-wide search (verify: L1)
 
 ## Workflow follow-up
 
