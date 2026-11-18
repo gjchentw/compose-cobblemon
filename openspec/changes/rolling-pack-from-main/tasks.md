@@ -7,6 +7,7 @@
 - [x] 1.3 Make `scripts/pack-inspect.sh` and `scripts/pack-inspect.py` inspect `dist/cobblemon.mrpack` by default, take the expected version as an option and check the version format and the versioned entry name; show a fresh export passing and a pack with the old entry name and one with a wrong expected version failing (verify: L2)
 - [x] 1.4 Add `scripts/pack-publish.sh` with a dry-run mode: it rebuilds with the committed pack's version, compares archive members byte for byte, and reports either "unchanged" or the version it would commit with both files in `dist/`; show "unchanged" for an untouched tree and a would-commit report after a change to `pack/options.txt` that is then reverted (verify: L1, L2)
 - [x] 1.5 Make `scripts/pack-export.sh` supply `PACK_VERSION=<version>` to its own Compose calls, so it builds in a checkout that has no `dist/cobblemon.env` yet (found by the 3.2 rehearsal: Compose interpolates the whole `compose.yaml`, including the server's required `PACK_VERSION`, before it runs the tools container); first show export failing in a fresh worktree of this branch, then succeeding (verify: L1, L2)
+- [x] 1.6 Make `scripts/pack-export.sh` keep only the existing files of a caller's `COMPOSE_ENV_FILES`, so it also builds from scratch in a shell whose profile lists `dist/cobblemon.env` before that file exists (found by the 3.3 check of the documented commands: Compose refuses a listed env file that is missing); first show export failing in a fresh worktree with that setting, then succeeding (verify: L1, L2)
 
 ## 2. Server and smoke check
 

@@ -42,6 +42,17 @@ is_pack_version "$version" \
 # (the environment wins over env files), so export also works in a checkout
 # that has no dist/cobblemon.env yet.
 export PACK_VERSION="$version"
+# A caller's COMPOSE_ENV_FILES (the administrator's profile) may list
+# dist/cobblemon.env before export has written it, and Compose refuses a listed
+# file that is missing: keep only the files that exist.
+if [ -n "${COMPOSE_ENV_FILES:-}" ]; then
+  kept=""
+  IFS=, read -r -a listed <<< "$COMPOSE_ENV_FILES"
+  for f in "${listed[@]}"; do
+    if [ -f "$f" ]; then kept="${kept:+$kept,}$f"; fi
+  done
+  if [ -n "$kept" ]; then export COMPOSE_ENV_FILES="$kept"; else unset COMPOSE_ENV_FILES; fi
+fi
 
 mkdir -p .build dist
 # A fresh path on every run: Docker Desktop may serve stale contents for a
