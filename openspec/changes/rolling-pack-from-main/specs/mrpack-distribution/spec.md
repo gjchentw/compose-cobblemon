@@ -91,7 +91,7 @@ CI SHALL check the version contract, export the pack with the version derived fr
 - **THEN** the version check, export and inspection run and the pack is kept as a build artifact
 
 ### Requirement: Least-privilege workflow
-CI jobs SHALL run with a read-only repository token by default. Only the job that commits the pack to `main` SHALL get write access, and it SHALL run only for pushes to `main` of the repository itself. Checkouts SHALL NOT persist credentials, except in that job, which needs them to push.
+CI jobs SHALL run with a read-only repository token by default. Only the job that commits the pack to `main` SHALL get write access, and it SHALL run only for pushes to `main` of the repository itself. Checkouts SHALL NOT persist credentials; the job that commits the pack SHALL give its token only to the step that pushes.
 
 #### Scenario: Pull request from a fork
 - **WHEN** CI runs for a pull request from a fork

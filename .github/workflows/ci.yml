@@ -1,5 +1,6 @@
 # CI for compose-cobblemon: L1 and L2 on every push and pull request, with a
-# dry run of the pack publish; L3/L4 on manual dispatch or a smoke/* branch.
+# dry run of the pack publish; on a push to main, the publish job commits the
+# pack when its contents changed; L3/L4 on manual dispatch or a smoke/* branch.
 # Actions are pinned by commit SHA; tool images are pinned inside the scripts.
 name: ci
 
@@ -12,10 +13,13 @@ on:
 permissions:
   contents: read
 
-# One run per ref at a time; a newer push to the same branch cancels the older run.
+# One run per ref at a time. On a branch a newer push cancels the older run. On
+# main a running run is never cancelled, so a publish is never cut off: newer
+# pushes wait, and only the newest waiting run is kept, which publishes the
+# newest main.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   # Baked into the client pack's server list at export time. Set them as
@@ -83,6 +87,44 @@ jobs:
           if-no-files-found: error
       - name: Publish dry run (would merging this commit publish a new pack?)
         run: scripts/pack-publish.sh --dry-run
+
+  publish:
+    # Commits dist/cobblemon.mrpack and dist/cobblemon.env to main when the
+    # pack's contents changed (scripts/pack-publish.sh). Only for pushes to main
+    # of the repository itself: not for pull requests, other branches or forks.
+    # Template copies are not forks, so they publish once their secrets are set.
+    name: Publish the pack to main
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.repository.fork
+    needs: [lint, validate, pack]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The write token is not stored in .git/config: the repository is
+          # bind-mounted into the tool containers. Only the push step gets it.
+          persist-credentials: false
+      - run: scripts/ci-env.sh
+      - name: Build the tools image
+        run: docker compose --profile tools build
+      - name: Commit the pack if it changed (refuses the placeholder host)
+        run: scripts/pack-publish.sh
+      - name: Push the pack commit to main
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ]; then
+            echo "no pack commit; nothing to push"
+            exit 0
+          fi
+          # The way actions/checkout authenticates, for this one command. A
+          # rejected push (main moved meanwhile) fails the job; the run for the
+          # newer main publishes.
+          auth="$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)"
+          echo "::add-mask::$auth"
+          git -c "http.$GITHUB_SERVER_URL/.extraheader=AUTHORIZATION: basic $auth" \
+            push origin HEAD:refs/heads/main
 
   smoke:
     # Manual dispatch (needs the workflow on the default branch), or push a branch
