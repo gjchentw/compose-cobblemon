@@ -23,7 +23,7 @@
 
 ## 4. CI
 
-- [ ] 4.1 Remove the release trigger and the pre-release and release jobs; make the `pack` job export with the pushed commit's version and run `scripts/pack-publish.sh --dry-run`; make the `validate` and `smoke` jobs use the version file (written by `scripts/ci-env.sh` or by the export) instead of a `PACK_VERSION` in `.env` (verify: L1)
+- [x] 4.1 Remove the release trigger and the pre-release and release jobs; make the `pack` job export with the pushed commit's version and run `scripts/pack-publish.sh --dry-run`; make the `validate` and `smoke` jobs use the version file (written by `scripts/ci-env.sh` or by the export) instead of a `PACK_VERSION` in `.env` (verify: L1)
 - [ ] 4.2 Add the `publish` job: pushes to `main` of the repository only, after `lint`, `validate` and `pack`; `contents: write`; real-host guard; `scripts/pack-publish.sh` committing only `dist/cobblemon.mrpack` and `dist/cobblemon.env` as `pack <version> [skip ci]`; serialized and never cancelled (verify: L1)
 - [ ] 4.3 Push the branch and a `smoke/*` branch, and confirm lint, validate, pack with its dry-run report, and the hosted smoke, persistence and restore jobs pass (verify: L1, L2, L3, L4)
 
