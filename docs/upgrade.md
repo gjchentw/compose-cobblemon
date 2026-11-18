@@ -1,14 +1,21 @@
 # Upgrade SOP
 
 Upgrade the pack (Cobblemon, Fabric, any mod) or the server image without surprising
-players. The rule: production never tracks "latest"; every change is a release that was
-tested on staging with a copy of the production world.
+players. The rule: production runs `main`, and merging to `main` publishes the new pack to
+every player at once. So every change is tested on staging, with a copy of the production
+world, from its branch before it is merged.
 
-The git tag is the version (see README "Version contract"): tag, mrpack name and the
-version inside it, `PACK_VERSION` and MOTD all carry the same `X.Y.Z`. Releases are
-published on GitHub; nothing in git is edited to release.
+The pack version is `YYYY.MM.DD-<commit>`, taken from the commit that changed the pack (see
+README "Version contract"). CI commits `dist/cobblemon.mrpack` and its version file
+`dist/cobblemon.env` to `main`; the MOTD and the name of the pre-filled server entry carry
+the same version. Nothing in git is edited by hand to release.
 
-## 1. Prepare the release candidate
+The commands below assume the shell has `COMPOSE_ENV_FILES=.env,dist/cobblemon.env`, as
+set up in `docs/admin-guide.md`; the scripts in `scripts/` set it themselves. Paths: the
+production checkout is `<your-repo>`, on `main`; the acceptance checkout is a git worktree
+next to it, `../<your-repo>-accept`.
+
+## 1. Prepare the branch
 
 1. Branch from `main`. Bump what changes:
    - a mod: `docker compose --profile tools run --rm packwiz modrinth install <modrinth version URL> -y`
@@ -19,35 +26,71 @@ published on GitHub; nothing in git is edited to release.
      or the game discards the pack's key bindings on first launch
    - the backup image: same in `compose.yaml`
 2. `scripts/lint.sh && docker compose config -q && scripts/pack-export.sh && scripts/pack-inspect.sh`
-3. Commit and push; merge to `main` once CI is green.
-4. On GitHub, **Releases > Draft a new release**: new tag `vX.Y.Z-rc.1` on that commit,
-   publish. CI builds `cobblemon-X.Y.Z-rc.1.mrpack`, attaches it and marks the release as a
-   pre-release.
+3. `scripts/pack-publish.sh --dry-run` tells whether merging would publish a new pack, and
+   which archive members change.
+4. Exporting rewrites `dist/cobblemon.mrpack` and `dist/cobblemon.env` in your checkout. Put
+   them back before committing (`git restore dist/`): only CI commits them.
+5. Push the branch and wait for CI to pass. Do not merge yet.
 
-If only the release itself changes (no mod or image bump), skip steps 1 to 3.
+## 2. Accept the branch on staging (Docker host)
 
-## 2. Test on staging (Docker host)
-
-1. `git fetch --tags && git checkout vX.Y.Z-rc.1`
-2. Download `cobblemon-X.Y.Z-rc.1.mrpack` from the release into `dist/` (or build the same pack
-   locally with `scripts/pack-export.sh X.Y.Z-rc.1`).
-3. Make sure staging is stopped, then copy the production world:
-   `COMPOSE_FILE=compose.yaml:compose.staging.yaml docker compose down && scripts/staging-clone-world.sh`
-4. Start staging with the candidate pack and run the automated checks:
+1. Check out the branch next to production, with production's settings, and build its pack:
    ```
-   export COMPOSE_FILE=compose.yaml:compose.staging.yaml PACK_VERSION=X.Y.Z-rc.1
+   cd <your-repo>
+   git fetch origin
+   git worktree add --detach ../<your-repo>-accept origin/<branch>
+   cp .env ../<your-repo>-accept/.env
+   cd ../<your-repo>-accept
+   scripts/pack-export.sh
+   ```
+   The worktree now has the branch's pack and `dist/cobblemon.env` naming its version.
+   Every command from here on runs in the worktree, so the relative `COMPOSE_ENV_FILES`
+   picks up the worktree's own `.env` and version file.
+2. Make sure staging is stopped, then copy the production world (production saves are
+   paused for the copy when it is running):
+   ```
+   COMPOSE_FILE=compose.yaml:compose.staging.yaml docker compose down
+   scripts/staging-clone-world.sh --production ../<your-repo>
+   ```
+3. A host without memory for two servers (each needs `MEMORY` plus the JVM's own overhead):
+   stop production now with `docker compose stop` in `../<your-repo>`, and start it again in
+   step 7.
+4. Start staging with the branch's pack and run the automated checks:
+   ```
+   export COMPOSE_FILE=compose.yaml:compose.staging.yaml
    scripts/smoke.sh && scripts/persist-test.sh && scripts/restore-drill.sh
-   unset COMPOSE_FILE PACK_VERSION
    ```
-5. Install the rc client pack and join staging on port 25566. Run `docs/acceptance-checklist.md`
-   with at least two players. Read the staging log for warnings: `COMPOSE_FILE=compose.yaml:compose.staging.yaml docker compose logs cobblemon | grep -iE 'warn|error'`.
-6. Anything fails: fix, publish `rc.2`, repeat. Nothing fails: publish the final release
-   `vX.Y.Z` on the same commit (a commit may carry both the rc tag and the final tag) and
-   wait for CI to attach `cobblemon-X.Y.Z.mrpack`. If `main` has moved since the candidate,
-   choose the candidate's commit under **Target > Recent Commits** in the release form, so
-   the final release is exactly what was tested.
+   The MOTD reads `[STAGING] <name> | Pack <branch version>`.
+5. Give the testers the branch's client pack, `dist/cobblemon.mrpack` from the worktree.
+   Its pre-filled entry points at production: they add `<host>:25566` by hand, or you
+   export a staging pack first with `SERVER_PUBLIC_HOST=<host>:25566 scripts/pack-export.sh`.
+   Run `docs/acceptance-checklist.md` with at least two players. Read the staging log for
+   warnings: `docker compose logs cobblemon | grep -iE 'warn|error'`.
+6. Anything fails: fix it on the branch and push, then in the worktree
+   `git fetch origin && git checkout --detach origin/<branch>`, rebuild the pack and repeat
+   from step 2.
+7. Everything passes: stop staging and remove the worktree, with its staging data and
+   backups, then start production again if you stopped it:
+   ```
+   docker compose down && unset COMPOSE_FILE
+   cd ../<your-repo>
+   git worktree remove --force ../<your-repo>-accept
+   docker compose up -d && scripts/smoke.sh    # only if you stopped production in step 3
+   ```
+8. Merge the branch to `main`.
 
-## 3. Upgrade production (Docker host)
+## 3. Publish (CI)
+
+The merge runs CI on `main`. When the pack's contents changed, the `publish` job commits
+`dist/cobblemon.mrpack` and `dist/cobblemon.env` to `main` as `pack <version> [skip ci]`; a
+merge that changes no pack contents (documentation, for example) publishes nothing. The
+fixed link serves the new pack within a few minutes:
+`https://raw.githubusercontent.com/<you>/<your-repo>/main/dist/cobblemon.mrpack`.
+
+Players who install the new pack cannot join the old server, so upgrade production soon
+after the publish.
+
+## 4. Upgrade production (Docker host)
 
 1. Announce: `docker compose exec cobblemon rcon-cli say "Server upgrade in 10 minutes"`.
 2. Pre-upgrade backup, kept forever, and proven to restore:
@@ -56,15 +99,23 @@ If only the release itself changes (no mod or image bump), skip steps 1 to 3.
    mv "backups/$(ls -t backups | grep tar.gz | head -n 1)" backups/keep/
    scripts/restore-drill.sh "keep/$(ls -t backups/keep | head -n 1)"
    ```
-3. `docker compose stop`
-4. `git fetch --tags && git checkout vX.Y.Z`, put `cobblemon-X.Y.Z.mrpack` in `dist/`, set
-   `PACK_VERSION=X.Y.Z` in `.env`. `scripts/smoke.sh` refuses to run if the checkout, the file
-   and `PACK_VERSION` do not all name the same release.
-5. `docker compose up -d && scripts/smoke.sh && scripts/restore-drill.sh`
-6. Add the outcome to the GitHub release notes and tell players the new pack version and
-   where to download it (`docs/player-guide.md`).
-7. Stop staging: `COMPOSE_FILE=compose.yaml:compose.staging.yaml docker compose down`.
+3. Note the running commit for `docs/rollback.md`: `git log -1 --format='%h %s'`.
+4. `docker compose stop && git pull`. The pull brings the compose files, the pack and its
+   version file together; `.env` is not edited.
+5. `docker compose up -d && scripts/smoke.sh && scripts/restore-drill.sh`. The smoke check
+   refuses a `PACK_VERSION` left in `.env` and a version file that does not match the pack.
+6. Tell players the new version (the MOTD shows it) and that the fixed link serves it; they
+   install it as a new profile (`docs/player-guide.md`). Run `docs/acceptance-checklist.md`
+   on production.
 
-Keep the previous tag checked out somewhere you can reach, the previous mrpack in `dist/`
-and the pre-upgrade archive in `backups/keep/` until the new release has survived one
-full backup cycle. They are what `docs/rollback.md` needs.
+Keep the noted commit and the pre-upgrade archive in `backups/keep/` until the new pack has
+survived one full backup cycle. They are what `docs/rollback.md` needs.
+
+### Once: moving a deployment from tag releases
+
+A deployment set up for a tag release (`v1.0.x`, `PACK_VERSION` in `.env`) changes over once,
+at its first upgrade under this SOP. In step 4, `git checkout main` before `git pull`; then
+delete the `PACK_VERSION` line from `.env`, add
+`export COMPOSE_ENV_FILES=.env,dist/cobblemon.env` to the profile of the account that runs
+the server (`docs/admin-guide.md`), open a new shell, and continue with step 5. The old
+`dist/cobblemon-<version>.mrpack` files are no longer used and can be deleted.

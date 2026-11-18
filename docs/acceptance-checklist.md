@@ -1,17 +1,20 @@
 # Acceptance Checklist (L5)
 
-Run on staging with the release candidate before every release, and once on production
-after the upgrade. Two players are needed for trading. Record one table per run.
+Run on staging with the branch before it is merged (`docs/upgrade.md`, section 2), and once
+on production after the upgrade. Merging to `main` publishes the pack to every player, so the
+staging run is the release gate. Two players are needed for trading. Record one table per run.
 
-Pack version: `________`  Environment: staging / production  Date: `________`
+Pack version: `________` (`YYYY.MM.DD-<commit>`, in the MOTD)  Environment: staging / production  Date: `________`
 Players: `________`  Launcher used: Modrinth App / Prism Launcher (cover both across the two runs)
 
-On staging the pre-filled entry points at production; for item 1 add the staging address
-(`<host>:25566`) by hand, or export a staging pack with `SERVER_PUBLIC_HOST=<host>:25566`.
+On staging the players install the branch's pack, `dist/cobblemon.mrpack` from the acceptance
+worktree, sent by the administrator. Its pre-filled entry points at production; for item 1
+add the staging address (`<host>:25566`) by hand, or export a staging pack in the worktree
+with `SERVER_PUBLIC_HOST=<host>:25566`. On production they install the pack from the fixed link.
 
 | # | Item | How to test | Result (pass/fail) | Notes |
 |---|---|---|---|---|
-| 1 | Login | Install the pack from the Releases page as in `docs/player-guide.md`, join from the pre-filled server entry | | |
+| 1 | Login | Install the pack as in `docs/player-guide.md`, join from the pre-filled server entry; the version in its name equals the version in the MOTD | | |
 | 2 | Pokémon spawn | Walk around spawn for two minutes; wild Pokémon appear in grass, water and caves | | |
 | 3 | Starter selection | A new player presses M, gets the starter screen (not the world map, which is on V) and receives the chosen Pokémon | | |
 | 4 | Catch | Craft or receive Poké Balls, weaken a wild Pokémon, catch it; it appears in the party | | |
@@ -27,4 +30,5 @@ Also note: client FPS at the pack defaults, any warning in the server log during
 (known harmless noise: `No data fixer registered for cobblemon:*` at startup),
 and whether the pre-filled server entry survived a pack update (item 1 on the second run).
 
-Sign-off: all eleven pass on staging, then all eleven pass on production.
+Sign-off: all eleven pass on staging before the merge, then all eleven pass on production
+after the upgrade.
