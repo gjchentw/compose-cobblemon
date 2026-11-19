@@ -11,7 +11,8 @@ Guidance for AI coding agents (Claude Code, Cursor, Copilot, OpenCode, etc.) and
 - `tools/packwiz/Dockerfile` — the pack tooling image
 - Settings and templates (`.env.example`, `config/`)
 - Helper scripts (`scripts/`)
-- CI (`.github/workflows/ci.yml`): checks on every push, and the pack build when a GitHub release is published
+- `dist/cobblemon.mrpack` and `dist/cobblemon.env` — the published pack and its version file, committed by CI only
+- CI (`.github/workflows/ci.yml`): checks on every push, and the pack publish on a push to `main`
 - `openspec/` — the OpenSpec specs (`openspec/specs/`) and changes (`openspec/changes/`); the workflow skills live in `.claude/skills/` and `.agents/skills/`
 - Documentation (`README.md`, `docs/`, and `tasks/`, the record of the work before OpenSpec)
 
@@ -116,9 +117,9 @@ The ladder has five levels, four automated and one run by people. Each task in a
 |---|---|---|
 | L1 Static | Both compose file sets are valid; Dockerfile, YAML, shell, workflow and Python lint clean; `packwiz refresh` leaves `pack/` unchanged | `scripts/lint.sh`, `docker compose config -q` |
 | L2 Build | The tools image builds; the pack exports and passes inspection; git holds only the placeholder version | `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/version-check.sh` |
-| L3 Smoke | The checkout, the pack file and `PACK_VERSION` name the same release; the stack becomes healthy within the timeout; the server-side mod set is exact; the port answers; RCON is not published | `scripts/smoke.sh` |
+| L3 Smoke | `.env` sets no `PACK_VERSION`, and the pack file and `dist/cobblemon.env` name the same version; the stack becomes healthy within the timeout; the server-side mod set is exact; the port answers; RCON is not published | `scripts/smoke.sh` |
 | L4 Persistence | The stack stops in order and restarts with the world intact; the newest backup restores | `scripts/persist-test.sh`, `scripts/restore-drill.sh` |
-| L5 Acceptance | Players complete the gameplay checklist on staging, then on production, before a release | `docs/acceptance-checklist.md` |
+| L5 Acceptance | Players complete the gameplay checklist on staging with the branch before it is merged, then on production after the upgrade | `docs/acceptance-checklist.md` |
 
 CI runs L1 and L2 on every push. L3 and L4 run on a hosted Linux runner on manual dispatch or when a `smoke/*` branch is pushed.
 
@@ -135,9 +136,9 @@ A task is not done until its named levels pass and the output is shown to the hu
 **Always**
 
 - Follow the OpenSpec workflow above; every commit maps to a task in an approved change's `tasks.md`.
-- Run L1 and L2 before every commit, plus every level the task names; run L3 and L4 before every release.
+- Run L1 and L2 before every commit, plus every level the task names; run L3 and L4 on staging before every merge that changes the pack or the stack (`docs/upgrade.md`).
 - Pin every image by tag and multi-arch digest, and every mod and loader version in `pack/`.
-- Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder.
+- Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder, except `PACK_VERSION`, which comes from `dist/cobblemon.env`.
 - Write in English in every committed file, except `docs/player-guide.zh-TW.md`.
 
 **Ask first**
@@ -153,8 +154,9 @@ A task is not done until its named levels pass and the output is shown to the hu
 **Never**
 
 - Commit `.env`, secrets, tokens or RCON passwords.
-- Commit runtime data or build output (world saves, backups, staging copies, `dist/`, logs, caches).
-- Commit a release version to `pack/pack.toml` or `.env.example`: the git tag is the release version (`mrpack-distribution` spec, `docs/adr/0004-git-tag-is-the-release-version.md`).
+- Commit runtime data or build output (world saves, backups, staging copies, logs, caches, anything else in `dist/`).
+- Commit `dist/cobblemon.mrpack` or `dist/cobblemon.env`: CI alone commits them, on `main`. After a local export, `git restore dist/` puts them back.
+- Commit a version other than the placeholder `0.0.0-dev` to `pack/pack.toml`, or a `PACK_VERSION` to `.env.example`: the pack version is derived from the commit (`mrpack-distribution` spec).
 - Use `latest` or any floating tag.
 - Publish the RCON port, or turn off online mode or the whitelist.
 - Hand-edit packwiz-generated files, other than `pack.toml` and a mod's `side` field followed by `packwiz refresh`.
@@ -173,4 +175,4 @@ A task is not done until its named levels pass and the output is shown to the hu
 - Work on a branch unless the human says otherwise.
 - One commit per completed task, in English, naming the change and the task number (for example `bump-cobblemon-1-9 2.1`).
 - Commit a change's artifacts, including the checked-off `tasks.md`, together with the files they describe; archiving is its own commit.
-- A release is a GitHub release published with a new tag `vX.Y.Z` or `vX.Y.Z-rc.N`; CI builds the pack and attaches it. Publishing is the human's call: the agent prepares the release note and the link, and the human publishes.
+- A release is a merge to `main`: CI builds the pack and, when its contents changed, commits it to `main`. Merging is the human's call: the agent prepares the branch and reports its verification, and the human merges.

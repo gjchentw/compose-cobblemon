@@ -21,8 +21,9 @@ created from this template builds a pack pointing at its own server without touc
 ## Consequences
 
 - `pack/` stays placeholder-free and `packwiz refresh` on it is always a no-op.
-- A tag build refuses to export with the placeholder host, so a GitHub Release can only
-  carry a real host; branch builds and fork pull requests still export with the placeholder.
+- The build that publishes the pack on `main` refuses the placeholder host, so a published
+  pack can only carry a real host; branch builds and fork pull requests still export with
+  the placeholder.
 - Players update by installing a new profile from the new mrpack, so the launcher
   overwriting `servers.dat` on in-place updates is not a concern.
 - The export writes into `.build/` under the repository, not the system temp directory,

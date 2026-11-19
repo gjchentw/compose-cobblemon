@@ -17,12 +17,12 @@ cd "$repo_root"
 
 name="$(env_value SERVER_NAME)"
 host="$(env_value SERVER_PUBLIC_HOST)"
-# A release must never carry the placeholder host: players would get a dead
-# pre-filled server entry. Enforced on tag builds (GITHUB_REF_TYPE=tag) and
-# whenever PACK_REQUIRE_REAL_HOST is set.
-if [ "${GITHUB_REF_TYPE:-}" = "tag" ] || [ -n "${PACK_REQUIRE_REAL_HOST:-}" ]; then
+# A published pack must never carry the placeholder host: players would get a
+# dead pre-filled server entry. Enforced whenever PACK_REQUIRE_REAL_HOST is
+# set, which scripts/pack-publish.sh does when it publishes.
+if [ -n "${PACK_REQUIRE_REAL_HOST:-}" ]; then
   if [ "$host" = "mc.example.com" ] || [ -z "$host" ]; then
-    echo "SERVER_PUBLIC_HOST is still the placeholder; set the SERVER_PUBLIC_HOST repository secret (CI) or .env before releasing" >&2
+    echo "SERVER_PUBLIC_HOST is still the placeholder; set the SERVER_PUBLIC_HOST repository secret (CI) or .env before publishing" >&2
     exit 1
   fi
 fi

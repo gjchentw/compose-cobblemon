@@ -15,7 +15,7 @@ hand-made client pack.
 The repository holds one packwiz pack under `pack/`. Every mod carries an explicit
 `side` (`client`, `server` or `both`). `packwiz modrinth export` writes one `.mrpack`
 whose index marks each file with client/server env flags. Players install that file.
-The server mounts the same file (`MODRINTH_MODPACK=/packs/cobblemon-<version>.mrpack`)
+The server mounts the same file (`MODRINTH_MODPACK=/packs/cobblemon.mrpack`)
 and `itzg/minecraft-server` installs only entries whose server flag is not
 `unsupported`. Client-only override files are excluded with
 `MODRINTH_OVERRIDES_EXCLUSIONS`.

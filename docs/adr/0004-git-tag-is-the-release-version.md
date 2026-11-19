@@ -1,7 +1,10 @@
 # ADR 0004: The git tag is the release version
 
-Status: accepted, 2026-11-06. Supersedes the "version committed in git" part of the
-original version contract.
+Status: superseded, 2026-11-19, by the OpenSpec change `rolling-pack-from-main`: the pack is
+built from `main` and its version is derived from the commit; there are no tag releases.
+The placeholder rule below still holds; see the `mrpack-distribution` spec and the README
+"Version contract". Accepted 2026-11-06, when it superseded the "version committed in git"
+part of the original version contract.
 
 ## Context
 
