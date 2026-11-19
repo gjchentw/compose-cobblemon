@@ -14,8 +14,8 @@ Fabric API or any mod by hand: the pack carries everything.
 
 ## 1. Download the pack
 
-Your admin sends you a link to the release page. Open it and download the file named
-`cobblemon-X.Y.Z.mrpack` (X.Y.Z is the pack version).
+Your admin sends you one link. Open it and your browser downloads `cobblemon.mrpack`. The
+link never changes: it always gives you the newest pack, so keep it for updates.
 
 ## 2. Install the pack
 
@@ -41,7 +41,8 @@ Set the Java maximum memory to 4 GB (minimum) or 6 GB (recommended). More than 8
 ## 4. Play
 
 1. Press **Play** on the profile. The first start takes a minute while Minecraft loads the mods.
-2. In the main menu choose **Multiplayer**. **Cobblemon Server** is already in the list.
+2. In the main menu choose **Multiplayer**. The server is already in the list, and its name
+   ends with your pack version in brackets, for example `Cobblemon Server (2026.11.18-95db987)`.
 3. Select it and click **Join Server**.
 
 If the server is not in your list, click **Add Server** and enter the address the admin gave you.
@@ -88,9 +89,11 @@ All keys can be changed under **Options > Controls > Key Binds**.
 
 ## Updating the pack
 
-When the server list shows a pack version in the MOTD (for example `Pack 1.1.0`) that differs from the one you installed, the server has been upgraded:
+The server list shows two versions: the one in the name of the server entry is your pack, and
+the one in the line under it (the MOTD, for example `Pack 2026.11.18-95db987`) is the
+server's. When they differ, the server has been upgraded:
 
-1. Download the new `.mrpack` from the link your admin sends.
+1. Download `cobblemon.mrpack` again from the same link.
 2. Install it as a new profile, exactly as in step 2.
 3. Play from the new profile. Nothing is lost: your Pokémon, items and progress live on the server.
 
@@ -101,9 +104,9 @@ Your client settings (render distance, key binds) return to the pack defaults in
 | Symptom | What it means | What to do |
 |---|---|---|
 | "You are not white-listed on this server!" | The admin has not added your username yet | Send your exact Minecraft username to the admin |
-| Join fails with a mod or version mismatch message | Your pack version differs from the server's | Check the MOTD and install the matching pack version |
+| Join fails with a mod or version mismatch message | Your pack version differs from the server's | Compare the version in the entry name with the MOTD; if they differ, update the pack (see "Updating the pack") |
 | The game crashes while loading | Not enough memory | Set the maximum memory to 6 GB (step 3) and update your graphics driver |
 | Low FPS | The defaults are too high for your PC | In **Options > Video Settings** lower Render Distance to 8 and Simulation Distance to 5 |
 | Pokémon do not appear or battles do nothing | The connection is unstable or the server is restarting | Wait a minute, then reconnect |
 
-When you report a problem, include the pack version you installed and the exact text of any error message.
+When you report a problem, include your pack version (in the name of the server entry) and the exact text of any error message.
