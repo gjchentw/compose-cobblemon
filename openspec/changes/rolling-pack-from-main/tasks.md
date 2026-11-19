@@ -29,7 +29,7 @@
 
 ## 5. Documentation and rules
 
-- [ ] 5.1 Update `README.md` (making a copy: push to `main`, keep the repository public, let the bot push; quick start: the pack and its version file are in the checkout, and `COMPOSE_ENV_FILES=.env,dist/cobblemon.env` is set once; the version contract; the fixed link) and the first-deployment steps of `docs/admin-guide.md`, including that the setting applies to every Compose command of the account and how to empty it for one command (verify: L1)
+- [x] 5.1 Update `README.md` (making a copy: push to `main`, keep the repository public, let the bot push; quick start: the pack and its version file are in the checkout, and `COMPOSE_ENV_FILES=.env,dist/cobblemon.env` is set once; the version contract; the fixed link) and the first-deployment steps of `docs/admin-guide.md`, including that the setting applies to every Compose command of the account and how to empty it for one command (verify: L1)
 - [ ] 5.2 Update both player guides with the fixed link and comparing the entry name with the MOTD, keeping the same sections in both (verify: L1)
 - [ ] 5.3 Update `AGENTS.md` (CI alone commits `dist/cobblemon.mrpack` and `dist/cobblemon.env`; `.env.example` lists every variable except `PACK_VERSION`; the placeholder rule; a release is a merge to `main`; the L3 and L5 descriptions) and mark `docs/adr/0004-git-tag-is-the-release-version.md` superseded; confirm with a search that no document still presents tag releases, release candidates or the Releases page as current (verify: L1)
 

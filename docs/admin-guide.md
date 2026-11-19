@@ -5,24 +5,44 @@ root on the Docker host. The host needs Docker 24+ with Compose 2.24+ and bash.
 
 ## First deployment
 
-1. Clone your repository (created from the template, see README "Make it yours") and
-   check out the release tag you are deploying:
-   `git clone https://github.com/<you>/<your-repo>.git && cd <your-repo> && git checkout v1.0.0`
+Run the server under an account dedicated to it: step 3 changes how every Compose command of
+that account reads its settings.
+
+1. Clone your repository (created from the template, see README "Make it yours") after its
+   first pack commit, and stay on `main`:
+   `git clone https://github.com/<you>/<your-repo>.git && cd <your-repo>`
+   The checkout holds the pack, `dist/cobblemon.mrpack`, and its version file,
+   `dist/cobblemon.env`; `cat dist/cobblemon.env` shows the version.
 2. `cp .env.example .env` and edit `.env`:
-   - `PACK_VERSION`: the release you deploy, the tag without the "v" (`1.0.0`)
    - `RCON_PASSWORD`: `openssl rand -base64 32`
    - `SERVER_NAME`, `SERVER_PUBLIC_HOST`: what players will see and connect to
    - `MEMORY`: `6G` on a 12 GB host, `4G` on an 8 GB host
    - `UID` and `GID`: the output of `id -u` and `id -g`
-3. `mkdir -p data backups/keep dist && chmod 750 data backups` so the directories belong to
+
+   Do not add `PACK_VERSION`: it comes from `dist/cobblemon.env`, and `scripts/smoke.sh`
+   refuses a `PACK_VERSION` in `.env`.
+3. Tell Compose to read the version file, once, in the shell profile of this account:
+   ```
+   echo 'export COMPOSE_ENV_FILES=.env,dist/cobblemon.env' >> ~/.profile
+   . ~/.profile
+   ```
+   Compose then reads `.env` first and the version file second. Without the setting,
+   `docker compose up` refuses to start and names it; the scripts in `scripts/` set it
+   themselves when it is missing. Two things to know:
+   - The paths are relative to the working directory, so run every command from the repo
+     root, as everywhere in this guide.
+   - The setting applies to every Compose command of this account. In another directory
+     without these files, Compose stops with "couldn't find env file". Empty it for one
+     command to get Compose's default (only `.env`):
+     `COMPOSE_ENV_FILES= docker compose ...`
+4. `mkdir -p data backups/keep && chmod 750 data backups` so the directories belong to
    you, not to root, and other accounts on the host cannot read the world or the RCON password.
-4. Put the pack in `dist/`: download `cobblemon-<version>.mrpack` from that release on your
-   repository's Releases page. The file name must match `PACK_VERSION`; `scripts/smoke.sh` also
-   checks the version inside the file. Send players the release link; the player guide tells
-   them to expect it from you.
 5. `docker compose up -d`, then `scripts/smoke.sh`. The first start downloads the
    server-side mods and takes a few minutes; the smoke test waits up to 10 minutes.
 6. Open port 25565/tcp on the host firewall. Never open 25575 (RCON).
+7. Send players the fixed link,
+   `https://raw.githubusercontent.com/<you>/<your-repo>/main/dist/cobblemon.mrpack`; the
+   player guide tells them to expect it from you. Upgrades follow `docs/upgrade.md`.
 
 ## Everyday commands
 
@@ -52,7 +72,7 @@ is the only way in, and that is intended.
 | `data/` | world, configs, whitelist, ops, logs | no |
 | `backups/` | tar archives from the backup sidecar; pruned after `PRUNE_BACKUPS_DAYS` | no |
 | `backups/keep/` | archives you want to keep (pre-upgrade); never pruned | no |
-| `dist/` | the mrpack the server installs and players download | no |
+| `dist/cobblemon.mrpack`, `dist/cobblemon.env` | the pack the server installs and players download, and its version | yes, committed by CI only |
 | `staging/` | data and backups of the staging stack | no |
 | `.env` | your settings and the RCON password | no, never |
 
@@ -93,4 +113,5 @@ When TPS drops, work down this list and stop at the first step that fixes it:
 
 - `ONLINE_MODE=true` and the whitelist are enforced; do not change them.
 - The image, the backup image and every mod are pinned; bump them only through `docs/upgrade.md`.
-- `.env`, `data/`, `backups/` and `dist/` are gitignored. Never commit them, and never share `.env`.
+- `.env`, `data/` and `backups/` are gitignored. Never commit them, and never share `.env`.
+  The two files in `dist/` are committed by CI only.
