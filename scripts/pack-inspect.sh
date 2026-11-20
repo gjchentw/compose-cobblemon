@@ -22,8 +22,10 @@ if [ "${1:-}" = "--expect" ]; then
 fi
 file="${1:-dist/cobblemon.mrpack}"
 [ -f "$file" ] || fail "missing $file; run scripts/pack-export.sh first"
-name="$(env_value SERVER_NAME)"
-host="$(env_value SERVER_PUBLIC_HOST)"
+# The same source export uses: the environment, then config/public.env.
+name="$(public_value SERVER_NAME)"
+host="$(public_value SERVER_PUBLIC_HOST)"
+name="${name:-Cobblemon Server}"
 
 docker compose --progress quiet --profile tools run --rm -T -w /work --entrypoint python3 \
   packwiz scripts/pack-inspect.py "$file" ${expect[@]+"${expect[@]}"} --name "$name" --host "$host" --pack /work/pack

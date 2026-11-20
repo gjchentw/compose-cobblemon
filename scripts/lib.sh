@@ -56,6 +56,30 @@ pack_version() {
   printf '%s\n' "$v"
 }
 
+# The committed public server information (public-server-info spec).
+PUBLIC_INFO_FILE="config/public.env"
+
+# public_value KEY: SERVER_NAME or SERVER_PUBLIC_HOST for a pack build. The
+# environment wins, for a one-off build (a staging pack with the staging port,
+# for example); otherwise the value comes from config/public.env and from
+# nowhere else: not .env, not the version file, not .env.example. Prints an
+# empty line when the file has the key without a value or does not have it.
+public_value() {
+  local key="$1" line
+  if [ -n "${!key:-}" ]; then
+    printf '%s\n' "${!key}"
+    return 0
+  fi
+  [ -f "$PUBLIC_INFO_FILE" ] || { echo "missing $PUBLIC_INFO_FILE" >&2; return 1; }
+  line="$(grep -E "^${key}=" "$PUBLIC_INFO_FILE" | tail -n 1 || true)"
+  line="${line#*=}"
+  line="${line%\"}"
+  line="${line#\"}"
+  line="${line%\'}"
+  line="${line#\'}"
+  printf '%s\n' "$line"
+}
+
 # env_value KEY
 # Prints KEY as Compose resolves it: from the environment, else from the files
 # in COMPOSE_ENV_FILES with the later file winning (so PACK_VERSION comes from

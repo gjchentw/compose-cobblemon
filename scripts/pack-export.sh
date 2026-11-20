@@ -15,14 +15,18 @@ cd "$repo_root"
 # shellcheck source=scripts/lib.sh
 . "$repo_root/scripts/lib.sh"
 
-name="$(env_value SERVER_NAME)"
-host="$(env_value SERVER_PUBLIC_HOST)"
+# The display name and the public address come from config/public.env (or, for
+# a one-off build, from the environment): see public_value in scripts/lib.sh.
+name="$(public_value SERVER_NAME)"
+host="$(public_value SERVER_PUBLIC_HOST)"
+name="${name:-Cobblemon Server}"
+[ -n "$host" ] || fail "SERVER_PUBLIC_HOST is empty; set it in $PUBLIC_INFO_FILE (the template's placeholder is mc.example.com)"
 # A published pack must never carry the placeholder host: players would get a
 # dead pre-filled server entry. Enforced whenever PACK_REQUIRE_REAL_HOST is
 # set, which scripts/pack-publish.sh does when it publishes.
 if [ -n "${PACK_REQUIRE_REAL_HOST:-}" ]; then
-  if [ "$host" = "mc.example.com" ] || [ -z "$host" ]; then
-    echo "SERVER_PUBLIC_HOST is still the placeholder; set the SERVER_PUBLIC_HOST repository secret (CI) or .env before publishing" >&2
+  if [ "$host" = "mc.example.com" ]; then
+    echo "SERVER_PUBLIC_HOST is still the placeholder; set it in $PUBLIC_INFO_FILE before publishing" >&2
     exit 1
   fi
 fi
