@@ -22,14 +22,8 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
-  # Baked into the client pack's server list at export time. Set them as
-  # repository secrets (Settings > Secrets and variables > Actions > Secrets),
-  # so a repository created from this template builds its own pack. When
-  # unset (branch builds without secrets, pull requests from forks),
-  # scripts/lib.sh falls back to the placeholders in .env.example; the build
-  # that publishes the pack refuses the placeholder host.
-  SERVER_NAME: ${{ secrets.SERVER_NAME }}
-  SERVER_PUBLIC_HOST: ${{ secrets.SERVER_PUBLIC_HOST }}
+  # The display name and the public address in the pack's server list come
+  # from the committed config/public.env; no repository secret is read.
   # Compose reads PACK_VERSION from the version file, as on a deployment.
   # scripts/ci-env.sh writes .env and, when no pack is committed yet,
   # dist/cobblemon.env; every job that runs Compose runs it first.

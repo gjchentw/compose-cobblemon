@@ -3,7 +3,7 @@
 ## 1. Source of the values
 
 - [x] 1.1 Add `config/public.env` with the placeholders, and a helper in `scripts/lib.sh` that resolves the two keys from the environment, then that file, and nothing else; `scripts/pack-export.sh` and `scripts/pack-inspect.sh` use it. Show that a value in `.env` is ignored, the file is used, and the environment overrides it (verify: L1, L2)
-- [ ] 1.2 Remove `SERVER_NAME` and `SERVER_PUBLIC_HOST` from `.env.example` and from the workflow's `env` (the two secrets); show both compose file sets still render and the pack job's steps pass in a fresh checkout (verify: L1, L2)
+- [x] 1.2 Remove `SERVER_NAME` and `SERVER_PUBLIC_HOST` from `.env.example` and from the workflow's `env` (the two secrets); show both compose file sets still render and the pack job's steps pass in a fresh checkout (verify: L1, L2)
 
 ## 2. Display name in the version file
 
