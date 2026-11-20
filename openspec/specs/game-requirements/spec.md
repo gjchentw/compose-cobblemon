@@ -81,8 +81,8 @@ Players SHALL be taught, in English and Traditional Chinese, how to choose a sta
 - **THEN** each step names the key or action it uses, matching the key bindings above
 
 ### Requirement: Gameplay acceptance checklist
-A gameplay checklist SHALL be completed by at least two players on staging and then on production before a release: login, Pokémon spawn, starter selection, catch, battle, trade, ride, death and respawn, server restart, world persistence, and reaching the server from another network. The two runs SHALL use Modrinth App and Prism Launcher.
+A gameplay checklist SHALL be completed by at least two players on staging, running the branch to be merged, before the merge, and again on production after the deployment: login, Pokémon spawn, starter selection, catch, battle, trade, ride, death and respawn, server restart, world persistence, and reaching the server from another network. The two runs SHALL use Modrinth App and Prism Launcher.
 
 #### Scenario: Release sign-off
-- **WHEN** a release is prepared
-- **THEN** all eleven items pass on staging and on production, and the launcher used for each run is recorded
+- **WHEN** a branch that changes the pack or the stack is ready to merge, which releases it
+- **THEN** all eleven items pass on staging before the merge and on production after the deployment, and the launcher used for each run is recorded
