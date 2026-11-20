@@ -175,4 +175,5 @@ A task is not done until its named levels pass and the output is shown to the hu
 - Work on a branch unless the human says otherwise.
 - One commit per completed task, in English, naming the change and the task number (for example `bump-cobblemon-1-9 2.1`).
 - Commit a change's artifacts, including the checked-off `tasks.md`, together with the files they describe; archiving is its own commit.
+- Never write a literal CI skip marker (`[skip ci]`, `[ci skip]`, `[no ci]`, `[skip actions]`, `[actions skip]`) anywhere in a commit message, not even when quoting it: GitHub then runs no workflow for that push, and a squash merge carries the text to `main`, where it would skip the pack publish. Only CI's own `pack <version>` commit carries the marker.
 - A release is a merge to `main`: CI builds the pack and, when its contents changed, commits it to `main`. Merging is the human's call: the agent prepares the branch and reports its verification, and the human merges.
