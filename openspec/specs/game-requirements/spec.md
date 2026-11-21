@@ -1,7 +1,7 @@
 # game-requirements Specification
 
 ## Purpose
-Declares the values the game dictates, which change when the mod set changes: the mods and their sides, the Minecraft, loader, Cobblemon and Java versions, the server's gameplay defaults and heap, the client defaults, what players are taught, and the gameplay acceptance checklist.
+Declares the values the game dictates, which change when the mod set changes: the pack's identity, the mods and their sides, the Minecraft, loader, Cobblemon and Java versions, the server's gameplay defaults and heap, the client settings files and their defaults, what players are taught, and the gameplay items of the acceptance run. It is the only capability to rewrite for another mod pack; the other three take every game value from here.
 
 ## Requirements
 

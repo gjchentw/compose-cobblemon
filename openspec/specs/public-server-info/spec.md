@@ -1,7 +1,7 @@
 # public-server-info Specification
 
 ## Purpose
-Defines the server information that is published to players and supplied by the deployer: the display name, the public address, the icon and the MOTD text, and where each value comes from.
+Defines the server information that is published to players and supplied by the deployer: the display name, the public address, the icon and the MOTD text, and where each value comes from. It names no game and assumes no platform of its own; the default display name comes from `game-requirements`.
 
 ## Requirements
 

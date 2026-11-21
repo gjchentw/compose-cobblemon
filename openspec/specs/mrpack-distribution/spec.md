@@ -1,7 +1,7 @@
 # mrpack-distribution Specification
 
 ## Purpose
-Turns the packwiz pack source into a verified `.mrpack`, builds and publishes it as a downloadable file for each GitHub release, and guides players through installing and updating it.
+Turns the packwiz pack source into a verified `.mrpack`, publishes it from `main` as one file behind a link that never changes, and guides players through installing and updating it. It assumes a packwiz pack whose mods are all downloaded from Modrinth's CDN, players on Modrinth App or Prism Launcher, and GitHub Actions in a public repository. It names no game: the mods, sides, versions, client settings files and the pack's base name come from `game-requirements`, and the display name and address from `public-server-info`.
 
 ## Requirements
 

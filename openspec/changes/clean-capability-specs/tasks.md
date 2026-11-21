@@ -2,7 +2,7 @@
 
 ## 1. Purposes
 
-- [ ] 1.1 Replace the Purpose paragraph of the four main specs with the texts in `design.md` (decision 6), editing `openspec/specs/` directly; show each paragraph before and after, and that `openspec validate --specs --strict` passes (verify: L1)
+- [x] 1.1 Replace the Purpose paragraph of the four main specs with the texts in `design.md` (decision 6), editing `openspec/specs/` directly; show each paragraph before and after, and that `openspec validate --specs --strict` passes (verify: L1)
 
 ## 2. Requirements against the repository
 

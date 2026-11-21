@@ -1,7 +1,7 @@
 # compose-services Specification
 
 ## Purpose
-Runs a Minecraft game server from a pack under Docker Compose on one Linux host, keeps it secure and observable, backs it up and restores it, provides a staging copy, and documents how an administrator operates it.
+Runs a Minecraft game server from a pack under Docker Compose on one Linux host, keeps it secure and observable, backs it up and restores it, provides a staging copy, defines the players' acceptance run, and documents how an administrator operates it. It assumes the itzg server image, which installs the server side of a `.mrpack`, and the itzg backup image. It names no game: the game's values come from `game-requirements`, the pack and its version from `mrpack-distribution`, and the name, address and icon from `public-server-info`.
 
 ## Requirements
 
