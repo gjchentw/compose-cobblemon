@@ -7,7 +7,7 @@
 ## 2. Requirements against the repository
 
 - [x] 2.1 Confirm the added and modified requirements of `game-requirements` against the files: the name in the exported pack's index, the published file names, the default display name in the rendered configuration, `options.txt` as the pack's only settings file with its nine lines, and the seven gameplay items in `docs/acceptance-checklist.md` (verify: L1, L2)
-- [ ] 2.2 Confirm the added and modified requirements of the three mechanism specs describe the present behaviour: `<pack>` reads `cobblemon` wherever the files name the pack, inspection rejects a pack with an extra override, and `docs/acceptance-checklist.md` holds the run's rules and the four items that do not depend on the game (verify: L1, L2)
+- [x] 2.2 Confirm the added and modified requirements of the three mechanism specs describe the present behaviour: `<pack>` reads `cobblemon` wherever the files name the pack, inspection rejects a pack with an extra override, and `docs/acceptance-checklist.md` holds the run's rules and the four items that do not depend on the game (verify: L1, L2)
 
 ## 3. Result
 
