@@ -38,19 +38,36 @@ collect() {
   )
 }
 
+# Staged copies of the files to lint, removed on exit. They live under the
+# repo's .build/ (gitignored, and never linted itself) because Docker can only
+# bind-mount paths the daemon's VM shares; system temp dirs may not be.
+stage_root=""
+selftest_tmp=""
+cleanup() { rm -rf ${stage_root:+"$stage_root"} ${selftest_tmp:+"$selftest_tmp"}; }
+
 # run_linter <tree> <image> <command...>
-# Mounts <tree> read-only at /work and the repo's linter configs at /config.
+# Runs <command> with the files in `found` (paths relative to <tree>) appended.
+# The files are copied, keeping their relative paths, into a fresh directory
+# that is mounted read-only at /work, next to the repo's linter configs at
+# /config. The container sees nothing else of the checkout: not .env, world
+# data, backups, staging copies or .git (mrpack-distribution spec). A fresh
+# path per run, because Docker Desktop may serve stale contents for a path that
+# was deleted and recreated while the daemon still has it cached.
 run_linter() {
-  local tree image
-  tree="$(cd "$1" && pwd -P)"   # physical path: Docker cannot mount through macOS symlinks like /var
-  image="$2"
+  local tree="$1" image="$2" stage f
   shift 2
+  stage="$(mktemp -d "$stage_root/run.XXXXXX")"
+  for f in ${found[@]+"${found[@]}"}; do
+    mkdir -p "$stage/$(dirname "$f")"
+    cp "$tree/$f" "$stage/$f"
+  done
+  stage="$(cd "$stage" && pwd -P)"   # physical path: Docker cannot mount through macOS symlinks like /var
   docker run --rm \
-    -v "$tree:/work:ro" \
+    -v "$stage:/work:ro" \
     -v "$repo_root/.hadolint.yaml:/config/hadolint.yaml:ro" \
     -v "$repo_root/.yamllint.yaml:/config/yamllint.yaml:ro" \
     -w /work \
-    "$image" "$@"
+    "$image" "$@" ${found[@]+"${found[@]}"}
 }
 
 # lint_tree <dir>: run every linter that has files to check under <dir>.
@@ -61,25 +78,25 @@ lint_tree() {
   collect "$tree" -name Dockerfile -o -name 'Dockerfile.*' -o -name '*.Dockerfile'
   if [ "${#found[@]}" -gt 0 ]; then
     log "== hadolint (${#found[@]} files)"
-    run_linter "$tree" "$HADOLINT_IMAGE" hadolint --config /config/hadolint.yaml "${found[@]}" || status=1
+    run_linter "$tree" "$HADOLINT_IMAGE" hadolint --config /config/hadolint.yaml || status=1
   fi
 
   collect "$tree" -name '*.yml' -o -name '*.yaml'
   if [ "${#found[@]}" -gt 0 ]; then
     log "== yamllint (${#found[@]} files)"
-    run_linter "$tree" "$YAMLLINT_IMAGE" yamllint --strict -c /config/yamllint.yaml "${found[@]}" || status=1
+    run_linter "$tree" "$YAMLLINT_IMAGE" yamllint --strict -c /config/yamllint.yaml || status=1
   fi
 
   collect "$tree" -name '*.sh'
   if [ "${#found[@]}" -gt 0 ]; then
     log "== shellcheck (${#found[@]} files)"
-    run_linter "$tree" "$SHELLCHECK_IMAGE" --shell=bash --external-sources "${found[@]}" || status=1
+    run_linter "$tree" "$SHELLCHECK_IMAGE" --shell=bash --external-sources || status=1
   fi
 
   collect "$tree" -path './.github/workflows/*.yml' -o -path './.github/workflows/*.yaml'
   if [ "${#found[@]}" -gt 0 ]; then
     log "== actionlint (${#found[@]} files)"
-    run_linter "$tree" "$ACTIONLINT_IMAGE" "${found[@]}" || status=1
+    run_linter "$tree" "$ACTIONLINT_IMAGE" || status=1
   fi
 
   collect "$tree" -name '*.py'
@@ -87,7 +104,7 @@ lint_tree() {
     log "== python syntax (${#found[@]} files)"
     # ast.parse checks syntax without writing __pycache__ into the read-only mount.
     run_linter "$tree" "$PYTHON_IMAGE" python3 -c \
-      'import ast, sys; [ast.parse(open(f).read(), f) for f in sys.argv[1:]]' "${found[@]}" || status=1
+      'import ast, sys; [ast.parse(open(f).read(), f) for f in sys.argv[1:]]' || status=1
   fi
 
   return "$status"
@@ -95,15 +112,13 @@ lint_tree() {
 
 # self_test: the harness must pass a clean tree, and for each linter it must
 # report the expected rule on a file with exactly one known violation.
-# The scratch tree lives under the repo's .build/ (gitignored) because Docker
-# can only bind-mount paths the daemon's VM shares; system temp dirs may not be.
-selftest_tmp=""
+# The scratch tree lives under the repo's .build/ (gitignored), like the
+# staged copies.
 self_test() {
   local tmp good bad status=0 out
   mkdir -p "$repo_root/.build"
   selftest_tmp="$(mktemp -d "$repo_root/.build/lint-selftest.XXXXXX")"
   tmp="$selftest_tmp"
-  trap 'rm -rf "$selftest_tmp"' EXIT
   good="$tmp/good"
   bad="$tmp/bad"
   mkdir -p "$good" "$bad"
@@ -203,6 +218,10 @@ BAD
 
   return "$status"
 }
+
+mkdir -p "$repo_root/.build"
+stage_root="$(mktemp -d "$repo_root/.build/lint.XXXXXX")"
+trap cleanup EXIT
 
 case "${1:-}" in
   --self-test)

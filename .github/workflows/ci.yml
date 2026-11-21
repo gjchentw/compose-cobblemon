@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false   # the repo is bind-mounted into tool containers
+          persist-credentials: false   # no step needs the token in .git/config
       - run: scripts/lint.sh
 
   validate:
@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false   # the repo is bind-mounted into tool containers
+          persist-credentials: false   # no step needs the token in .git/config
       - run: scripts/ci-env.sh
       - run: docker compose config -q
       - run: docker compose -f compose.yaml -f compose.staging.yaml config -q
@@ -58,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false   # the repo is bind-mounted into tool containers
+          persist-credentials: false   # no step needs the token in .git/config
       - run: scripts/ci-env.sh
       - name: Version contract (pack.toml holds only the placeholder; .env.example sets no PACK_VERSION)
         run: scripts/version-check.sh
@@ -100,8 +100,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The write token is not stored in .git/config: the repository is
-          # bind-mounted into the tool containers. Only the push step gets it.
+          # The write token is not stored in .git/config, where every later
+          # step could read it. Only the push step gets it.
           persist-credentials: false
       - run: scripts/ci-env.sh
       - name: Build the tools image
@@ -134,7 +134,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: false   # the repo is bind-mounted into tool containers
+          persist-credentials: false   # no step needs the token in .git/config
       - run: scripts/ci-env.sh MEMORY=4G PAUSE_IF_NO_PLAYERS=false
       - run: mkdir -p data backups/keep dist && chmod 750 data backups   # as the admin guide says
       - run: docker compose --profile tools build
