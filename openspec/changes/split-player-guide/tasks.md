@@ -3,7 +3,7 @@
 ## 1. The two guides
 
 - [x] 1.1 Write `docs/pack-install-guide.md` and `docs/pack-install-guide.zh-TW.md` from the old guide's requirements, download, install, join, update and install troubleshooting parts, with a memory step that only links to the play guide; show that both files have the same sections and that the guide states no memory figure and no key (verify: L1)
-- [ ] 1.2 Write `docs/play-guide.md` and `docs/play-guide.zh-TW.md` from the old guide's memory, first-minutes, key and game troubleshooting parts, opening with a link to the install guide; show that both files have the same sections and that the guide explains no download, install or update step (verify: L1)
+- [x] 1.2 Write `docs/play-guide.md` and `docs/play-guide.zh-TW.md` from the old guide's memory, first-minutes, key and game troubleshooting parts, opening with a link to the install guide; show that both files have the same sections and that the guide explains no download, install or update step (verify: L1)
 
 ## 2. Retire the old guide
 
