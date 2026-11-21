@@ -21,7 +21,7 @@ cd "$repo_root"
 . "$repo_root/scripts/lib.sh"
 
 timeout="${SMOKE_TIMEOUT:-600}"
-service="cobblemon"
+service="minecraft"
 marker="pt$(date +%s)"   # unique per run, so it cannot collide with a real objective
 
 rcon() { docker compose exec -T "$service" rcon-cli "$@"; }

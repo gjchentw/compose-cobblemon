@@ -8,7 +8,7 @@ x-logging: &logging
     max-file: "5"
 
 services:
-  cobblemon:
+  minecraft:
     # Pinned by tag AND multi-arch index digest. Bump both together, via docs/upgrade.md.
     image: docker.io/itzg/minecraft-server:2026.10.1-java21@sha256:07ab333a8542208c4c863a78fd3cf3fd1138d5a2e118306e1a316d202f69ab74
     container_name: cobblemon
@@ -43,7 +43,7 @@ services:
       ONLINE_MODE: "true"
       ENABLE_WHITELIST: "true"
       ENFORCE_WHITELIST: "true"
-      # --- admin: RCON stays on the internal network; use `docker compose exec cobblemon rcon-cli` ---
+      # --- admin: RCON stays on the internal network; use `docker compose exec minecraft rcon-cli` ---
       ENABLE_RCON: "true"
       RCON_PASSWORD: "${RCON_PASSWORD:?set RCON_PASSWORD in .env}"
     volumes:
@@ -68,11 +68,11 @@ services:
     # Run as the host admin so archives in ./backups are theirs to move and delete.
     user: "${UID:-1000}:${GID:-1000}"
     depends_on:
-      cobblemon:
+      minecraft:
         condition: service_healthy
     environment:
       TZ: "${TZ:-UTC}"
-      RCON_HOST: cobblemon
+      RCON_HOST: minecraft
       RCON_PASSWORD: "${RCON_PASSWORD:?set RCON_PASSWORD in .env}"
       BACKUP_METHOD: tar
       INITIAL_DELAY: "0"             # compose already waited for the server to be healthy

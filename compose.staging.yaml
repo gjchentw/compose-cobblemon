@@ -9,7 +9,7 @@
 name: cobblemon-staging
 
 services:
-  cobblemon:
+  minecraft:
     container_name: cobblemon-staging
     ports: !override
       - "${STAGING_PORT:-25566}:25565"

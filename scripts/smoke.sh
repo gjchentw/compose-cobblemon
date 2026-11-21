@@ -20,7 +20,7 @@ cd "$repo_root"
 . "$repo_root/scripts/lib.sh"
 
 timeout="${SMOKE_TIMEOUT:-600}"
-service="cobblemon"
+service="minecraft"
 
 [ -n "$(env_value RCON_PASSWORD)" ] || fail "RCON_PASSWORD is empty; set a real one in .env"
 

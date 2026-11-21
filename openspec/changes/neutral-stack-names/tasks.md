@@ -2,7 +2,7 @@
 
 ## 1. Names
 
-- [ ] 1.1 Rename the main service to `minecraft` in `compose.yaml` (service, `depends_on`, `RCON_HOST`, comments), `compose.staging.yaml`, `scripts/smoke.sh`, `scripts/persist-test.sh` and `scripts/staging-clone-world.sh`; show both file sets render with services `minecraft` and `backup` (verify: L1, L2)
+- [x] 1.1 Rename the main service to `minecraft` in `compose.yaml` (service, `depends_on`, `RCON_HOST`, comments), `compose.staging.yaml`, `scripts/smoke.sh`, `scripts/persist-test.sh` and `scripts/staging-clone-world.sh`; show both file sets render with services `minecraft` and `backup` (verify: L1, L2)
 - [ ] 1.2 Remove `container_name` from both files, set the staging project name from `STAGING_PROJECT_NAME` (default `minecraft-staging`) and add the variable to `.env.example`, and remove the tools image's fixed tag; show the rendered names with and without the variable, and that export still builds and runs the tools image (verify: L1, L2)
 - [ ] 1.3 Add `scripts/config-check.sh` and run it in the CI `validate` job; show it fails on the commit before this change and on a copy with a `container_name` added back, and passes now (verify: L1)
 - [ ] 1.4 `scripts/smoke.sh` refuses a staging file set that would run under production's project name; show the refusal with `COMPOSE_PROJECT_NAME` exported and with it in `.env`, that no container is created or changed, and that production and a normal staging run are not refused (verify: L1)

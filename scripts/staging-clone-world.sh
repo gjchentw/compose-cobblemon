@@ -41,17 +41,17 @@ prod_compose() {
 }
 
 staging_files="compose.yaml:compose.staging.yaml"
-if [ -n "$(COMPOSE_FILE="$staging_files" docker compose ps -q --status running cobblemon 2>/dev/null)" ]; then
+if [ -n "$(COMPOSE_FILE="$staging_files" docker compose ps -q --status running minecraft 2>/dev/null)" ]; then
   fail "the staging server is running; stop it first: COMPOSE_FILE=$staging_files docker compose down"
 fi
 [ -e "$prod_dir/data/world/level.dat" ] || fail "$prod_dir/data/world/level.dat not found; is there a production world yet?"
 log "== production checkout: $prod_dir"
 
 prod_running=""
-if [ -n "$(prod_compose ps -q --status running cobblemon 2>/dev/null)" ]; then
+if [ -n "$(prod_compose ps -q --status running minecraft 2>/dev/null)" ]; then
   prod_running=1
 fi
-rcon() { prod_compose exec -T cobblemon rcon-cli "$@" >/dev/null; }
+rcon() { prod_compose exec -T minecraft rcon-cli "$@" >/dev/null; }
 
 mkdir -p staging/data
 if [ -e staging/data/world ]; then
@@ -62,7 +62,7 @@ if [ -n "$prod_running" ]; then
   log "== pausing production saves (save-off, save-all flush)"
   # The trap is installed before save-off so that any failure or Ctrl-C after
   # this point still turns autosave back on.
-  trap 'if rcon save-on; then log "== production saves resumed"; else log "WARNING: save-on failed; in $prod_dir run: docker compose exec cobblemon rcon-cli save-on"; fi' EXIT
+  trap 'if rcon save-on; then log "== production saves resumed"; else log "WARNING: save-on failed; in $prod_dir run: docker compose exec minecraft rcon-cli save-on"; fi' EXIT
   rcon save-off
   rcon save-all flush
 fi
