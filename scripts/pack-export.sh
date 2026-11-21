@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Export the pack from pack/ to dist/cobblemon.mrpack, with its version file
-# dist/cobblemon.env (only PACK_VERSION=<version>) next to it (L2).
+# dist/cobblemon.env (PACK_VERSION=<version> and the display name the pack was
+# built with, SERVER_NAME) next to it (L2).
 # The committed pack/ is copied to a fresh build directory first, so what is
 # generated at export time (the version, servers.dat with the real server
 # host) never touches the source of truth.
@@ -20,6 +21,11 @@ cd "$repo_root"
 name="$(public_value SERVER_NAME)"
 host="$(public_value SERVER_PUBLIC_HOST)"
 name="${name:-Cobblemon Server}"
+# The name is written single-quoted into the version file, so Compose reads it
+# literally; a single quote or a line break cannot be written that way.
+case "$name" in
+  *"'"* | *$'\n'* | *$'\r'*) fail "the display name (SERVER_NAME) must not contain a single quote or a line break: $name" ;;
+esac
 [ -n "$host" ] || fail "SERVER_PUBLIC_HOST is empty; set it in $PUBLIC_INFO_FILE (the template's placeholder is mc.example.com)"
 # A published pack must never carry the placeholder host: players would get a
 # dead pre-filled server entry. Enforced whenever PACK_REQUIRE_REAL_HOST is
@@ -80,9 +86,9 @@ docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir
   packwiz /work/scripts/make-servers-dat.py --name "$name ($version)" --host "$host" --out servers.dat
 run refresh
 run modrinth export -o "/work/$build_dir/cobblemon.mrpack"
-printf 'PACK_VERSION=%s\n' "$version" > "$build_dir/cobblemon.env"
+printf "PACK_VERSION=%s\nSERVER_NAME='%s'\n" "$version" "$name" > "$build_dir/cobblemon.env"
 # Both files are moved into dist/ only after the export succeeded, so a failed
 # export leaves the previous pair in dist/ as it was.
 mv "$build_dir/cobblemon.mrpack" dist/cobblemon.mrpack
 mv "$build_dir/cobblemon.env" dist/cobblemon.env
-echo "exported dist/cobblemon.mrpack and dist/cobblemon.env, version $version" >&2
+echo "exported dist/cobblemon.mrpack and dist/cobblemon.env, version $version, display name $name" >&2

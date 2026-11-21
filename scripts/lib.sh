@@ -31,9 +31,9 @@ commit_version() {
 }
 
 # The environment files Compose reads, as the administrator's shell has them:
-# COMPOSE_ENV_FILES=.env,dist/cobblemon.env (dist/cobblemon.env holds only
-# PACK_VERSION; the later file wins). When the caller has not set it, use the
-# same list, keeping only the files that exist: Compose refuses a listed file
+# COMPOSE_ENV_FILES=.env,dist/cobblemon.env (dist/cobblemon.env holds
+# PACK_VERSION and SERVER_NAME; the later file wins). When the caller has not
+# set it, use the same list, keeping only the files that exist: Compose refuses a listed file
 # that is missing, and dist/cobblemon.env does not exist before the first
 # export or publish. Relative paths resolve from the working directory, the
 # repository root for every script.
