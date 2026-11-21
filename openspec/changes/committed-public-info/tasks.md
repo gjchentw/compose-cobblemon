@@ -13,12 +13,12 @@
 ## 3. Publish
 
 - [x] 3.1 `scripts/pack-publish.sh` skips with a message and exit 0 on an empty or placeholder address, in publish mode and as "would skip" in the dry run, and treats a differing or missing display name in the committed version file as a change. Simulate against a local bare remote: placeholder skips and pushes nothing; a real address publishes; an equal pack with a version file lacking the name publishes; a documentation-only push after that publishes nothing (verify: L1, L2)
-- [ ] 3.2 Update the workflow's comments and the publish step's name for the skip; push the branch and a `smoke/*` branch and confirm lint, validate, pack with its dry-run report, and the hosted smoke, persistence and restore jobs pass (verify: L1, L2, L3, L4)
+- [x] 3.2 Update the workflow's comments and the publish step's name for the skip; push the branch and a `smoke/*` branch and confirm lint, validate, pack with its dry-run report, and the hosted smoke, persistence and restore jobs pass (verify: L1, L2, L3, L4)
 
 ## 4. Documents and rules
 
 - [ ] 4.1 Update `README.md` ("Make it yours": edit `config/public.env` instead of setting secrets; quick start; version contract; layout), `docs/admin-guide.md` (first deployment no longer sets the two values in `.env`), `docs/upgrade.md` and `docs/acceptance-checklist.md` (the one-off override for a staging pack; the migration from secrets) (verify: L1)
-- [ ] 4.2 Update `AGENTS.md` (`.env.example` exception covers `SERVER_NAME`; the overview lists `config/public.env`) and confirm with a search that no document or script still presents the secrets or `.env` as the source of the two values (verify: L1)
+- [ ] 4.2 Update `AGENTS.md` (`.env.example` exception covers `SERVER_NAME`; the overview lists `config/public.env`) and confirm with a search that no document or script still presents the secrets or `.env` as the source of the two values; the search found one, fixed here: the source and the placeholder sentences of ADR 0003, with a dated amendment note (verify: L1)
 
 ## Workflow follow-up
 

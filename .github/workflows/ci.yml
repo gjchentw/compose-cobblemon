@@ -84,9 +84,11 @@ jobs:
 
   publish:
     # Commits dist/cobblemon.mrpack and dist/cobblemon.env to main when the
-    # pack's contents changed (scripts/pack-publish.sh). Only for pushes to main
-    # of the repository itself: not for pull requests, other branches or forks.
-    # Template copies are not forks, so they publish once their secrets are set.
+    # pack's contents or the display name changed (scripts/pack-publish.sh).
+    # Only for pushes to main of the repository itself: not for pull requests,
+    # other branches or forks. Template copies are not forks: they publish once
+    # config/public.env holds their address. While it holds the placeholder, as
+    # in the template itself, the job skips the publish and succeeds.
     name: Publish the pack to main
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.repository.fork
     needs: [lint, validate, pack]
@@ -102,7 +104,7 @@ jobs:
       - run: scripts/ci-env.sh
       - name: Build the tools image
         run: docker compose --profile tools build
-      - name: Commit the pack if it changed (refuses the placeholder host)
+      - name: Commit the pack if it changed (skips while config/public.env holds the placeholder address)
         run: scripts/pack-publish.sh
       - name: Push the pack commit to main
         env:
