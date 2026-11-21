@@ -23,7 +23,7 @@ There is no application code. "Tests" here are lint and config validation, pack 
 - Everything committed to this repository is written in English: documentation, OpenSpec artifacts (proposals, specs, designs, task lists), ADRs, comments in Dockerfiles, Compose files and scripts, commit messages and PR descriptions.
 - Conversation between the agent and the human may be in whatever language the human uses. Questions, answers and discussion are not bound by the English rule; written artifacts are.
 - When the human gives input in another language, the agent translates it into English before recording it in any file.
-- One exception, decided 2026-11-03: `docs/player-guide.zh-TW.md` is a Traditional Chinese copy of `docs/player-guide.md` for players. The English file is the primary version; any task that changes one changes both.
+- One exception, decided 2026-11-03: the two player guides have Traditional Chinese copies, `docs/pack-install-guide.zh-TW.md` of `docs/pack-install-guide.md` and `docs/play-guide.zh-TW.md` of `docs/play-guide.md`. The English files are the primary versions; any task that changes one changes its copy.
 
 ## Collaboration Protocol: The Agent Asks, the Human Decides
 
@@ -139,7 +139,7 @@ A task is not done until its named levels pass and the output is shown to the hu
 - Run L1 and L2 before every commit, plus every level the task names; run L3 and L4 on staging before every merge that changes the pack or the stack (`docs/upgrade.md`).
 - Pin every image by tag and multi-arch digest, and every mod and loader version in `pack/`.
 - Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder, except `PACK_VERSION` and `SERVER_NAME`, which come from `dist/cobblemon.env` (the name is written there from `config/public.env` when the pack is built).
-- Write in English in every committed file, except `docs/player-guide.zh-TW.md`.
+- Write in English in every committed file, except the two Traditional Chinese player guides, `docs/pack-install-guide.zh-TW.md` and `docs/play-guide.zh-TW.md`.
 
 **Ask first**
 

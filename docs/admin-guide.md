@@ -45,7 +45,8 @@ that account reads its settings.
 6. Open port 25565/tcp on the host firewall. Never open 25575 (RCON).
 7. Send players the fixed link,
    `https://raw.githubusercontent.com/<you>/<your-repo>/main/dist/cobblemon.mrpack`; the
-   player guide tells them to expect it from you. Upgrades follow `docs/upgrade.md`.
+   pack install guide (`docs/pack-install-guide.md`) tells them to expect it from you.
+   Upgrades follow `docs/upgrade.md`.
 
 ## Everyday commands
 

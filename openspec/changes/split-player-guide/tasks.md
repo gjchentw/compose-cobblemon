@@ -8,7 +8,7 @@
 ## 2. Retire the old guide
 
 - [x] 2.1 Show that every instruction line of `docs/player-guide.md` and `docs/player-guide.zh-TW.md` is in one of the new guides, listing the lines the split rewrote; then delete the two files and point `README.md`, `docs/upgrade.md` and `docs/acceptance-checklist.md` at the new guides (verify: L1)
-- [ ] 2.2 Reword the language exception in `AGENTS.md` to name the two Chinese copies, and confirm with a search that nothing outside `tasks/` and the archived changes still refers to `player-guide` (verify: L1)
+- [x] 2.2 Reword the language exception in `AGENTS.md` to name the two Chinese copies, and confirm with a search that nothing outside `tasks/` and the archived changes still refers to `player-guide`; the search also found the words "player guide" in `docs/admin-guide.md`, changed here to name the pack install guide (verify: L1)
 
 ## Workflow follow-up
 
