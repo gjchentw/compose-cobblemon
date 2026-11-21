@@ -61,6 +61,9 @@ run_linter() {
     mkdir -p "$stage/$(dirname "$f")"
     cp "$tree/$f" "$stage/$f"
   done
+  # Readable by any user: mktemp -d creates the directory 0700, and some linter
+  # images run as a non-root user (actionlint runs as guest).
+  chmod -R a+rX "$stage"
   stage="$(cd "$stage" && pwd -P)"   # physical path: Docker cannot mount through macOS symlinks like /var
   docker run --rm \
     -v "$stage:/work:ro" \
