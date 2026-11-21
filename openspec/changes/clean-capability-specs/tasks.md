@@ -11,7 +11,7 @@
 
 ## 3. Result
 
-- [ ] 3.1 In a throwaway clone, archive the change and show that the main specs pass strict validation, that the scan which finds 24 lines with a game value in the three mechanism specs today finds none, and that `game-requirements` declares the five values the other specs refer to (verify: L1)
+- [x] 3.1 In a throwaway clone, archive the change and show that the main specs pass strict validation, that the scan which finds 24 lines with a game value in the three mechanism specs today finds none, and that `game-requirements` declares the five values the other specs refer to (verify: L1)
 
 ## Workflow follow-up
 
