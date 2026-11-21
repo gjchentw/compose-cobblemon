@@ -182,6 +182,25 @@ BAD
     fi
   done
 
+  # A linter container must see the files it checks and nothing else: not the
+  # deployment's .env, world data or .git (mrpack-distribution spec). The
+  # "linter" here lists every file under /work.
+  log "-- self-test: a linter container sees only the files it checks"
+  local seen="$tmp/visible" list_files
+  list_files='import os; [print(os.path.relpath(os.path.join(d, f), "/work")) for d, _, fs in os.walk("/work") for f in fs]'
+  mkdir -p "$seen/data" "$seen/.git"
+  printf 'print("ok")\n' > "$seen/ok.py"
+  printf 'RCON_PASSWORD=decoy\n' > "$seen/.env"
+  printf 'rcon.password=decoy\n' > "$seen/data/server.properties"
+  printf '[core]\n' > "$seen/.git/config"
+  collect "$seen" -name '*.py'
+  if out="$(run_linter "$seen" "$PYTHON_IMAGE" python3 -c "$list_files" 2>&1)" && [ "$out" = "ok.py" ]; then
+    log "PASS only ok.py is visible"
+  else
+    log "FAIL the linter container sees: $(printf '%s' "$out" | sort | tr '\n' ' ')"
+    status=1
+  fi
+
   return "$status"
 }
 
