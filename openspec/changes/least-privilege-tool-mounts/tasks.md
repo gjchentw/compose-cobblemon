@@ -9,11 +9,11 @@
 
 - [x] 2.1 Add a self-test case to `scripts/lint.sh`: a scratch tree with a file to check and decoy `.env`, `data/` and `.git/` files, which fails if the linter container sees anything but the staged file; show it fails with the current mounts (verify: L1)
 - [x] 2.2 Stage each linter's files into a fresh directory under `.build/` and mount only that copy, read-only; update the `run_linter` comment in `scripts/lint.sh` and the `persist-credentials` comments in `.github/workflows/ci.yml`, keeping `persist-credentials: false` on every checkout. Show that the self-test passes, including the new case and every known-bad case; and that `scripts/lint.sh` checks the same number of files per linter as before, with no findings (verify: L1)
-- [ ] 2.3 Added during 3.1: make each staged copy readable by any user, since `mktemp -d` creates it `0700` and the actionlint image runs as the non-root user `guest`. On the hosted Linux runner the L1 lint job failed on 2.2 (runs 44919753434 and 44919755931); Docker Desktop on macOS does not enforce these permissions, so the local lint passed. Show the local self-test and lint still pass, and that the lint job passes on the runner (verify: L1)
+- [x] 2.3 Added during 3.1: make each staged copy readable by any user, since `mktemp -d` creates it `0700` and the actionlint image runs as the non-root user `guest`. On the hosted Linux runner the L1 lint job failed on 2.2 (runs 44919753434 and 44919755931); Docker Desktop on macOS does not enforce these permissions, so the local lint passed. Show the local self-test and lint still pass, and that the lint job passes on the runner (verify: L1)
 
 ## 3. Hosted runner
 
-- [ ] 3.1 Push the branch and a `smoke/*` branch; confirm that lint, validate with the extended check, pack with the publish dry run, and the hosted smoke, persistence and restore jobs pass (verify: L1, L2, L3, L4)
+- [x] 3.1 Push the branch and a `smoke/*` branch; confirm that lint, validate with the extended check, pack with the publish dry run, and the hosted smoke, persistence and restore jobs pass (verify: L1, L2, L3, L4)
 
 ## Workflow follow-up
 
