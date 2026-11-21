@@ -15,9 +15,12 @@ that account reads its settings.
    `dist/cobblemon.env`; `cat dist/cobblemon.env` shows the version.
 2. `cp .env.example .env` and edit `.env`:
    - `RCON_PASSWORD`: `openssl rand -base64 32`
-   - `SERVER_NAME`, `SERVER_PUBLIC_HOST`: what players will see and connect to
    - `MEMORY`: `6G` on a 12 GB host, `4G` on an 8 GB host
    - `UID` and `GID`: the output of `id -u` and `id -g`
+
+   The server's name and public address are not set here. They are in the committed
+   `config/public.env` (README "Make it yours"); the name reaches the server through
+   `dist/cobblemon.env`, so a `SERVER_NAME` in `.env` is not used.
 
    Do not add `PACK_VERSION`: it comes from `dist/cobblemon.env`, and `scripts/smoke.sh`
    refuses a `PACK_VERSION` in `.env`.
@@ -72,7 +75,8 @@ is the only way in, and that is intended.
 | `data/` | world, configs, whitelist, ops, logs | no |
 | `backups/` | tar archives from the backup sidecar; pruned after `PRUNE_BACKUPS_DAYS` | no |
 | `backups/keep/` | archives you want to keep (pre-upgrade); never pruned | no |
-| `dist/cobblemon.mrpack`, `dist/cobblemon.env` | the pack the server installs and players download, and its version | yes, committed by CI only |
+| `config/public.env` | the server's display name and public address, published in the pack | yes |
+| `dist/cobblemon.mrpack`, `dist/cobblemon.env` | the pack the server installs and players download; its version and display name | yes, committed by CI only |
 | `staging/` | data and backups of the staging stack | no |
 | `.env` | your settings and the RCON password | no, never |
 

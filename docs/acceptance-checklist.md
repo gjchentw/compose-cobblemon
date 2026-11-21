@@ -10,7 +10,8 @@ Players: `________`  Launcher used: Modrinth App / Prism Launcher (cover both ac
 On staging the players install the branch's pack, `dist/cobblemon.mrpack` from the acceptance
 worktree, sent by the administrator. Its pre-filled entry points at production; for item 1
 add the staging address (`<host>:25566`) by hand, or export a staging pack in the worktree
-with `SERVER_PUBLIC_HOST=<host>:25566`. On production they install the pack from the fixed link.
+with `SERVER_PUBLIC_HOST=<host>:25566 scripts/pack-export.sh` (the environment overrides
+`config/public.env` for that one build). On production they install the pack from the fixed link.
 
 | # | Item | How to test | Result (pass/fail) | Notes |
 |---|---|---|---|---|

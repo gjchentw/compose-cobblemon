@@ -17,7 +17,7 @@
 
 ## 4. Documents and rules
 
-- [ ] 4.1 Update `README.md` ("Make it yours": edit `config/public.env` instead of setting secrets; quick start; version contract; layout), `docs/admin-guide.md` (first deployment no longer sets the two values in `.env`), `docs/upgrade.md` and `docs/acceptance-checklist.md` (the one-off override for a staging pack; the migration from secrets) (verify: L1)
+- [x] 4.1 Update `README.md` ("Make it yours": edit `config/public.env` instead of setting secrets; quick start; version contract; layout), `docs/admin-guide.md` (first deployment no longer sets the two values in `.env`), `docs/upgrade.md` and `docs/acceptance-checklist.md` (the one-off override for a staging pack; the migration from secrets) (verify: L1)
 - [ ] 4.2 Update `AGENTS.md` (`.env.example` exception covers `SERVER_NAME`; the overview lists `config/public.env`) and confirm with a search that no document or script still presents the secrets or `.env` as the source of the two values; the search found one, fixed here: the source and the placeholder sentences of ADR 0003, with a dated amendment note (verify: L1)
 
 ## Workflow follow-up

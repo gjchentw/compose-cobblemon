@@ -25,6 +25,8 @@ next to it, `../<your-repo>-accept`.
      version (`version:<n>`, the `world_version` of that Minecraft release; 1.21.1 is 3955),
      or the game discards the pack's key bindings on first launch
    - the backup image: same in `compose.yaml`
+   - the server's display name or public address: edit `config/public.env`; both are built
+     into the pack, so the change is published like any other
 2. `scripts/lint.sh && docker compose config -q && scripts/pack-export.sh && scripts/pack-inspect.sh`
 3. `scripts/pack-publish.sh --dry-run` tells whether merging would publish a new pack, and
    which archive members change.
@@ -63,7 +65,8 @@ next to it, `../<your-repo>-accept`.
    The MOTD reads `[STAGING] <name> | Pack <branch version>`.
 5. Give the testers the branch's client pack, `dist/cobblemon.mrpack` from the worktree.
    Its pre-filled entry points at production: they add `<host>:25566` by hand, or you
-   export a staging pack first with `SERVER_PUBLIC_HOST=<host>:25566 scripts/pack-export.sh`.
+   export a staging pack first with `SERVER_PUBLIC_HOST=<host>:25566 scripts/pack-export.sh`
+   (the environment overrides `config/public.env` for that one build).
    Run `docs/acceptance-checklist.md` with at least two players. Read the staging log for
    warnings: `docker compose logs cobblemon | grep -iE 'warn|error'`.
 6. Anything fails: fix it on the branch and push, then in the worktree
@@ -81,9 +84,11 @@ next to it, `../<your-repo>-accept`.
 
 ## 3. Publish (CI)
 
-The merge runs CI on `main`. When the pack's contents changed, the `publish` job commits
-`dist/cobblemon.mrpack` and `dist/cobblemon.env` to `main` as `pack <version> [skip ci]`; a
-merge that changes no pack contents (documentation, for example) publishes nothing. The
+The merge runs CI on `main`. When the pack's contents or the display name changed, the
+`publish` job commits `dist/cobblemon.mrpack` and `dist/cobblemon.env` to `main` as
+`pack <version> [skip ci]`; a merge that changes neither (documentation, for example)
+publishes nothing, and so does a repository whose `config/public.env` still holds the
+placeholder address. The
 fixed link serves the new pack within a few minutes:
 `https://raw.githubusercontent.com/<you>/<your-repo>/main/dist/cobblemon.mrpack`.
 
@@ -119,3 +124,16 @@ delete the `PACK_VERSION` line from `.env`, add
 `export COMPOSE_ENV_FILES=.env,dist/cobblemon.env` to the profile of the account that runs
 the server (`docs/admin-guide.md`), open a new shell, and continue with step 5. The old
 `dist/cobblemon-<version>.mrpack` files are no longer used and can be deleted.
+
+### Once: moving a copy from repository secrets to `config/public.env`
+
+A copy that set the repository secrets `SERVER_NAME` and `SERVER_PUBLIC_HOST` changes over
+once, after it has merged the template's change that adds `config/public.env`:
+
+1. Put the two values in `config/public.env` and commit to `main`. CI publishes a pack and a
+   version file that carries the display name, even when the pack's contents are the same
+   as before.
+2. Delete the two repository secrets; nothing reads them any more.
+3. On the Docker host, upgrade as in section 4, and delete the `SERVER_NAME` and
+   `SERVER_PUBLIC_HOST` lines from `.env`: the server now takes the name from
+   `dist/cobblemon.env`.
