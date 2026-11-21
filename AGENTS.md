@@ -9,7 +9,7 @@ Guidance for AI coding agents (Claude Code, Cursor, Copilot, OpenCode, etc.) and
 - `compose.yaml` and the `compose.staging.yaml` override (the server runs a pinned upstream image)
 - `pack/` — the packwiz pack, the single source of truth for the client pack and the server's mod set
 - `tools/packwiz/Dockerfile` — the pack tooling image
-- Settings and templates (`.env.example`, `config/`)
+- Settings and templates (`.env.example`, `config/`), including `config/public.env`, the server's display name and public address, read by pack builds locally and in CI
 - Helper scripts (`scripts/`)
 - `dist/cobblemon.mrpack` and `dist/cobblemon.env` — the published pack and its version file, committed by CI only
 - CI (`.github/workflows/ci.yml`): checks on every push, and the pack publish on a push to `main`
@@ -138,7 +138,7 @@ A task is not done until its named levels pass and the output is shown to the hu
 - Follow the OpenSpec workflow above; every commit maps to a task in an approved change's `tasks.md`.
 - Run L1 and L2 before every commit, plus every level the task names; run L3 and L4 on staging before every merge that changes the pack or the stack (`docs/upgrade.md`).
 - Pin every image by tag and multi-arch digest, and every mod and loader version in `pack/`.
-- Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder, except `PACK_VERSION`, which comes from `dist/cobblemon.env`.
+- Keep `.env.example` complete: every variable the stack reads, with a safe default or a placeholder, except `PACK_VERSION` and `SERVER_NAME`, which come from `dist/cobblemon.env` (the name is written there from `config/public.env` when the pack is built).
 - Write in English in every committed file, except `docs/player-guide.zh-TW.md`.
 
 **Ask first**
