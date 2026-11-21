@@ -8,7 +8,7 @@
 ## 2. Display name in the version file
 
 - [x] 2.1 Export writes `PACK_VERSION` and a single-quoted `SERVER_NAME` to `dist/cobblemon.env` and refuses a name with a single quote or a line break before writing anything; show the rendered MOTD carries a name with spaces and a `$` unchanged, and that a `SERVER_NAME` left in `.env` loses to the version file (verify: L1, L2)
-- [ ] 2.2 Run the stack on a pack built with a non-default name and show the MOTD and the pack's entry start with it; run persistence and restore on the rebuilt stack (verify: L3, L4)
+- [x] 2.2 Run the stack on a pack built with a non-default name and show the MOTD and the pack's entry start with it; run persistence and restore on the rebuilt stack (verify: L3, L4)
 
 ## 3. Publish
 
