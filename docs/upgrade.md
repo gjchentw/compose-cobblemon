@@ -62,13 +62,14 @@ next to it, `../<your-repo>-accept`.
    export COMPOSE_FILE=compose.yaml:compose.staging.yaml
    scripts/smoke.sh && scripts/persist-test.sh && scripts/restore-drill.sh
    ```
-   The MOTD reads `[STAGING] <name> | Pack <branch version>`.
+   The MOTD reads `[STAGING] <name> | Pack <branch version>`. Staging is its own Compose
+   project, named by `STAGING_PROJECT_NAME` in `.env` (default `minecraft-staging`).
 5. Give the testers the branch's client pack, `dist/cobblemon.mrpack` from the worktree.
    Its pre-filled entry points at production: they add `<host>:25566` by hand, or you
    export a staging pack first with `SERVER_PUBLIC_HOST=<host>:25566 scripts/pack-export.sh`
    (the environment overrides `config/public.env` for that one build).
    Run `docs/acceptance-checklist.md` with at least two players. Read the staging log for
-   warnings: `docker compose logs cobblemon | grep -iE 'warn|error'`.
+   warnings: `docker compose logs minecraft | grep -iE 'warn|error'`.
 6. Anything fails: fix it on the branch and push, then in the worktree
    `git fetch origin && git checkout --detach origin/<branch>`, rebuild the pack and repeat
    from step 2.
@@ -97,7 +98,7 @@ after the publish.
 
 ## 4. Upgrade production (Docker host)
 
-1. Announce: `docker compose exec cobblemon rcon-cli say "Server upgrade in 10 minutes"`.
+1. Announce: `docker compose exec minecraft rcon-cli say "Server upgrade in 10 minutes"`.
 2. Pre-upgrade backup, kept forever, and proven to restore:
    ```
    docker compose exec -e PAUSE_IF_NO_PLAYERS=false backup backup now
@@ -137,3 +138,25 @@ once, after it has merged the template's change that adds `config/public.env`:
 3. On the Docker host, upgrade as in section 4, and delete the `SERVER_NAME` and
    `SERVER_PUBLIC_HOST` lines from `.env`: the server now takes the name from
    `dist/cobblemon.env`.
+
+### Once: moving a deployment to the role-named services
+
+A deployment started before the main service was renamed from `cobblemon` to `minecraft`
+changes over once, at the upgrade that brings the rename:
+
+1. In section 4, step 5, start with `docker compose up -d --remove-orphans` in place of
+   `docker compose up -d`. The flag removes the container of the old `cobblemon` service;
+   the backup container is recreated under its new name without help. Without the flag an
+   old container that is still running keeps the port, and the new one fails to start. The
+   world is in `./data` and is not touched.
+2. Use `minecraft` where your own notes and scripts say `cobblemon`, for example
+   `docker compose exec minecraft rcon-cli list`. Compose answers
+   `service "cobblemon" is not running` to the old name. Containers are no longer called
+   `cobblemon` and `cobblemon-backup` but `<your-repo>-minecraft-1` and `<your-repo>-backup-1`.
+3. If a staging stack from before is still on the host, remove it:
+   `docker compose -p cobblemon-staging down`. Staging now runs as the project named by
+   `STAGING_PROJECT_NAME` in `.env`; set it when the host carries a second deployment
+   (`docs/admin-guide.md`, "Two deployments on one host").
+
+Rolling back across the rename (`docs/rollback.md`) takes the same flag in step 3:
+`docker compose up -d --remove-orphans`, which then removes the `minecraft` container.

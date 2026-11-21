@@ -20,7 +20,7 @@ out `PREV` at once, and a revert on `main` publishes the old contents to players
 
 1. Announce and stop:
    ```
-   docker compose exec cobblemon rcon-cli say "Rolling back, back in 10 minutes"
+   docker compose exec minecraft rcon-cli say "Rolling back, back in 10 minutes"
    docker compose stop
    ```
 2. Return the checkout to the previous commit:
@@ -32,13 +32,16 @@ out `PREV` at once, and a revert on `main` publishes the old contents to players
    ```
    docker compose up -d && scripts/smoke.sh
    ```
+   When `PREV` names the main service differently from the commit you left (the rename from
+   `cobblemon` to `minecraft`), start with `docker compose up -d --remove-orphans`, and use
+   that commit's service name in the commands of this document.
 4. Only if the world itself is broken, restore it from the pre-upgrade archive
    (the archive holds `world/`, `config/` and the admin files; mods are reinstalled from the pack).
    The archive is opened and checked first, the current world is moved aside, and only then
    is the restored copy put in place, so a wrong archive name cannot cost you the live world:
    ```
    docker compose stop
-   docker compose run --rm --no-deps --entrypoint sh -v "$PWD/backups/keep:/keep:ro" cobblemon -c '
+   docker compose run --rm --no-deps --entrypoint sh -v "$PWD/backups/keep:/keep:ro" minecraft -c '
      set -e
      rm -rf /tmp/r && mkdir -p /tmp/r
      tar xzf /keep/ARCHIVE.tar.gz -C /tmp/r
@@ -51,7 +54,7 @@ out `PREV` at once, and a revert on `main` publishes the old contents to players
    docker compose up -d && scripts/smoke.sh
    ```
    After the smoke test passes and players confirm the world, delete the aside copies:
-   `docker compose exec cobblemon rm -rf /data/world.pre-rollback /data/config.pre-rollback`.
+   `docker compose exec minecraft rm -rf /data/world.pre-rollback /data/config.pre-rollback`.
 5. Revert on `main`: revert the merge that caused the problem (`git revert -m 1 <merge>`) on a
    branch, and accept and merge that branch like any other change (`docs/upgrade.md`,
    sections 1 to 3). Production already runs `PREV` meanwhile. CI publishes a pack with the

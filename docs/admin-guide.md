@@ -53,21 +53,45 @@ that account reads its settings.
 | Task | Command |
 |---|---|
 | Status and health | `docker compose ps` |
-| Follow the server log | `docker compose logs -f cobblemon` |
-| Who is online | `docker compose exec cobblemon rcon-cli list` |
-| Whitelist a player | `docker compose exec cobblemon rcon-cli whitelist add PLAYER_NAME` |
-| Remove from whitelist | `docker compose exec cobblemon rcon-cli whitelist remove PLAYER_NAME` |
-| Give operator rights | `docker compose exec cobblemon rcon-cli op PLAYER_NAME` |
-| Broadcast a message | `docker compose exec cobblemon rcon-cli say "Restart in 5 minutes"` |
-| Restart the server | `docker compose restart cobblemon` (players are disconnected; the world is saved first) |
+| Follow the server log | `docker compose logs -f minecraft` |
+| Who is online | `docker compose exec minecraft rcon-cli list` |
+| Whitelist a player | `docker compose exec minecraft rcon-cli whitelist add PLAYER_NAME` |
+| Remove from whitelist | `docker compose exec minecraft rcon-cli whitelist remove PLAYER_NAME` |
+| Give operator rights | `docker compose exec minecraft rcon-cli op PLAYER_NAME` |
+| Broadcast a message | `docker compose exec minecraft rcon-cli say "Restart in 5 minutes"` |
+| Restart the server | `docker compose restart minecraft` (players are disconnected; the world is saved first) |
 | Stop everything | `docker compose stop` |
-| Resource usage | `docker stats cobblemon --no-stream` |
+| Resource usage | `docker compose stats --no-stream` |
 | Backup right now | `docker compose exec -e PAUSE_IF_NO_PLAYERS=false backup backup now` |
 | Keep a backup forever | `mv backups/world-<timestamp>.tar.gz backups/keep/` |
 | Verify backups restore | `scripts/restore-drill.sh` |
 
-RCON is reachable only inside the compose network; `docker compose exec cobblemon rcon-cli`
+RCON is reachable only inside the compose network; `docker compose exec minecraft rcon-cli`
 is the only way in, and that is intended.
+
+The services are `minecraft` (the game server) and `backup`. Compose names their containers
+after the project, which is the checkout's directory name: `<your-repo>-minecraft-1` and
+`<your-repo>-backup-1`. Use `docker compose` commands, as above, and not container names.
+
+## Two deployments on one host
+
+Two repositories made from this template can run on one host, each with its production and
+its staging stack. Nothing in the committed files fixes a name, so they stay apart as long as:
+
+- the two checkouts have different directory names, since the directory names the
+  production project;
+- each `.env` sets its own `MC_PORT` and `STAGING_PORT`;
+- each `.env` sets its own `STAGING_PROJECT_NAME`, for example `<your-repo>-staging`. Two
+  staging stacks with the same project name are one project to Compose: the second one
+  started takes over the first one's containers, without an error;
+- the host has memory for every server that runs at the same time (`MEMORY` plus the JVM's
+  own overhead, each).
+
+Do not set `COMPOSE_PROJECT_NAME`, in the shell profile or in `.env`: it replaces the staging
+project name, so a staging run would recreate production's containers with staging settings.
+`scripts/smoke.sh` refuses such a run and `scripts/config-check.sh` reports it; a hand-typed
+`docker compose up` does not. The one `COMPOSE_ENV_FILES` setting in the profile serves both
+deployments, because its paths are relative to the directory a command runs in.
 
 ## Where things live
 
@@ -101,7 +125,7 @@ Desktop it happens on every run. Check with `scripts/restore-drill.sh` if in dou
 
 ## Performance triage
 
-Watch TPS and MSPT first (`docker compose exec cobblemon rcon-cli tps` is not vanilla; use
+Watch TPS and MSPT first (`docker compose exec minecraft rcon-cli tps` is not vanilla; use
 the `spark` mod once it is added in a later release), then CPU and RAM with `docker stats`.
 When TPS drops, work down this list and stop at the first step that fixes it:
 

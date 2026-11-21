@@ -26,7 +26,7 @@ testing a branch on a copy of the real world before it is merged.
 ```
 pack/  ──CI on main──▶  dist/cobblemon.mrpack (+ cobblemon.env)  ──raw link──▶  players
                                      │
-                                     └──git pull──▶  cobblemon service (server side only)  ──▶  ./data
+                                     └──git pull──▶  minecraft service (server side only)  ──▶  ./data
                                                               │
                                                               └──▶  backup sidecar  ──▶  ./backups
 ```
@@ -83,7 +83,7 @@ The pack and its version file are in the checkout, so there is nothing to downlo
 `docker compose up` refuses to start and names the setting.
 
 Open 25565/tcp to players, send them the fixed link, and whitelist them with
-`docker compose exec cobblemon rcon-cli whitelist add PLAYER_NAME`.
+`docker compose exec minecraft rcon-cli whitelist add PLAYER_NAME`.
 
 To try a change to `pack/` without publishing, run `scripts/pack-export.sh`: it rebuilds both
 files in `dist/` with the checked-out commit's version and the values in `config/public.env`
@@ -133,7 +133,7 @@ caches it for a few minutes after a publish.
 ## Repository layout
 
 ```
-compose.yaml              production stack: cobblemon + backup (+ packwiz under profile "tools")
+compose.yaml              production stack: minecraft + backup (+ packwiz under profile "tools")
 compose.staging.yaml      staging override: own project name, port 25566, staging/ data
 .env.example              every variable with a default or placeholder
 pack/                     packwiz source of truth (pack.toml, index.toml, mods/*.pw.toml, options.txt)
