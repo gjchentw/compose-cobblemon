@@ -28,14 +28,14 @@ Running `packwiz refresh` on `pack/` SHALL leave it unchanged. Only `pack.toml` 
 
 #### Scenario: Version in the example environment file
 - **WHEN** `.env.example` sets `PACK_VERSION` and `scripts/version-check.sh` runs
-- **THEN** the check fails and says that the version comes from `dist/cobblemon.env`
+- **THEN** the check fails and says that the version comes from `dist/<pack>.env`
 
 ### Requirement: Export builds a versioned pack from a copy
-Export SHALL build `dist/cobblemon.mrpack` from a copy of `pack/` with the version substituted, without modifying `pack/`, and SHALL write `dist/cobblemon.env` holding only `PACK_VERSION=<version>` and `SERVER_NAME`, the display name the pack was built with. Without a version argument it SHALL use the checked-out commit's version. It SHALL reject a version in another format, an explicitly empty one, and a display name that cannot be written to the version file unchanged.
+Export SHALL build `dist/<pack>.mrpack` from a copy of `pack/` with the version substituted, without modifying `pack/`, and SHALL write `dist/<pack>.env` holding only `PACK_VERSION=<version>` and `SERVER_NAME`, the display name the pack was built with. Without a version argument it SHALL use the checked-out commit's version. It SHALL reject a version in another format, an explicitly empty one, and a display name that cannot be written to the version file unchanged.
 
 #### Scenario: Release version build
-- **WHEN** `scripts/pack-export.sh 2026.11.17-dbb7da6` runs with the display name `My Cobblemon World`
-- **THEN** `dist/cobblemon.mrpack` exists with internal version `2026.11.17-dbb7da6`, `dist/cobblemon.env` sets `PACK_VERSION` to `2026.11.17-dbb7da6` and `SERVER_NAME` to `My Cobblemon World`, and `git status` shows `pack/` unchanged
+- **WHEN** `scripts/pack-export.sh 2026.11.17-dbb7da6` runs with the display name `My Server`
+- **THEN** `dist/<pack>.mrpack` exists with internal version `2026.11.17-dbb7da6`, `dist/<pack>.env` sets `PACK_VERSION` to `2026.11.17-dbb7da6` and `SERVER_NAME` to `My Server`, and `git status` shows `pack/` unchanged
 
 #### Scenario: Default version
 - **WHEN** `scripts/pack-export.sh` runs without a version on a checkout of commit `dbb7da6` committed on 2026-11-17 UTC
@@ -57,7 +57,7 @@ Export SHALL write into the pack one pre-filled server entry built from the disp
 - **THEN** the pack's `servers.dat` holds exactly one entry named after the display name and the pack version, connecting to that address, and `pack/` has no `servers.dat`
 
 ### Requirement: Pack contents are exact
-Inspection SHALL fail unless the pack contains exactly the index and the two client overrides `options.txt` and `servers.dat`, and every download URL points to `cdn.modrinth.com`.
+Inspection SHALL fail unless the pack contains exactly the index, the server entry `servers.dat` that export generates and the client settings files that `game-requirements` declares, and every download URL points to `cdn.modrinth.com`.
 
 #### Scenario: Unexpected file in the pack
 - **WHEN** a pack contains an extra override or a download from another host
@@ -75,7 +75,7 @@ Inspection SHALL fail unless every mod file in `pack/` appears exactly once in t
 - **THEN** inspection fails and names the mod
 
 ### Requirement: Client overrides match the source
-Inspection SHALL fail unless the pack's `options.txt` equals the committed one and starts with a numeric data version line, and its `servers.dat` parses with exactly one entry whose address equals the configured one and whose name is the configured display name followed by the pack version in parentheses.
+Inspection SHALL fail unless every client settings file in the pack equals its committed source, the pack's `options.txt` starts with a numeric data version line, and its `servers.dat` parses with exactly one entry whose address equals the configured one and whose name is the configured display name followed by the pack version in parentheses.
 
 #### Scenario: Swapped name and address
 - **WHEN** the entry's name and address are swapped
@@ -95,12 +95,12 @@ CI jobs SHALL run with a read-only repository token by default. Only the job tha
 - **WHEN** CI runs for a pull request from a fork
 - **THEN** it has read-only access, the publishing job does not run, and the pack is built with placeholder public information
 
-### Requirement: Template copies release without local tooling
+### Requirement: Template copies publish without local tooling
 A repository created from this template SHALL publish its own pack after its owner commits the display name and the public address to `config/public.env` on `main`, without cloning the repository and without setting repository secrets.
 
 #### Scenario: New template copy
 - **WHEN** an owner creates a public repository from the template and commits their values to `config/public.env` on `main` in the web editor
-- **THEN** CI commits a `dist/cobblemon.mrpack` whose pre-filled entry points at that owner's server
+- **THEN** CI commits a `dist/<pack>.mrpack` whose pre-filled entry points at that owner's server
 
 ### Requirement: Player install and update guide
 The repository SHALL provide a pack install and update guide for players, in English and a Traditional Chinese copy with the same sections, that covers what players need, downloading the pack from the fixed link the administrator sends, installing it in Modrinth App or Prism Launcher, joining from the pre-filled entry, updating by installing the new pack as a new profile when the version in the entry's name differs from the version in the MOTD, and troubleshooting installing and joining.
@@ -117,11 +117,11 @@ A built pack's version SHALL be `YYYY.MM.DD-<commit>`, where the date is the UTC
 - **THEN** its internal version is `2026.11.17-dbb7da6`
 
 ### Requirement: Every change on main republishes the pack
-On every push to `main`, CI SHALL build the pack for the pushed commit and compare its contents, ignoring the version, with the committed `dist/cobblemon.mrpack`, and the display name it was built with against the one in the committed `dist/cobblemon.env`. When either differs, CI SHALL commit the new pack and its version file to `main` in one commit whose message names the version and skips CI. When both are equal, nothing SHALL be committed.
+On every push to `main`, CI SHALL build the pack for the pushed commit and compare its contents, ignoring the version, with the committed `dist/<pack>.mrpack`, and the display name it was built with against the one in the committed `dist/<pack>.env`. When either differs, CI SHALL commit the new pack and its version file to `main` in one commit whose message names the version and skips CI. When both are equal, nothing SHALL be committed.
 
 #### Scenario: A mod change is merged
 - **WHEN** a commit that changes `pack/` is pushed to `main`
-- **THEN** CI commits a new `dist/cobblemon.mrpack` and a `dist/cobblemon.env` naming the version derived from that commit, and the bot commit does not start another CI run
+- **THEN** CI commits a new `dist/<pack>.mrpack` and a `dist/<pack>.env` naming the version derived from that commit, and the bot commit does not start another CI run
 
 #### Scenario: A documentation change is merged
 - **WHEN** a commit that changes only documentation is pushed to `main`
@@ -132,11 +132,11 @@ On every push to `main`, CI SHALL build the pack for the pushed commit and compa
 - **THEN** CI commits the pack and a version file that carries the display name
 
 ### Requirement: Fixed download link
-Players SHALL download the current pack from one link that never changes: the raw file `dist/cobblemon.mrpack` on `main`. The repository SHALL be public for the link to work.
+Players SHALL download the current pack from one link that never changes: the raw file `dist/<pack>.mrpack` on `main`. The repository SHALL be public for the link to work.
 
 #### Scenario: Link serves the new pack
 - **WHEN** CI has committed a new pack to `main`
-- **THEN** the raw link of `dist/cobblemon.mrpack` on `main` serves it within the host's cache time
+- **THEN** the raw link of `dist/<pack>.mrpack` on `main` serves it within the host's cache time
 
 ### Requirement: Published packs never carry the placeholder address
 The job that commits the pack to `main` SHALL publish nothing while the public address is empty or the placeholder `mc.example.com`: it SHALL finish successfully with a message naming `config/public.env`. Export SHALL refuse to build a pack for publishing with such an address.
@@ -162,3 +162,10 @@ The pack install and update guide SHALL NOT state what `game-requirements` decla
 #### Scenario: A mod change that moves a key
 - **WHEN** a change to the mod set changes a key or the recommended memory
 - **THEN** only the play guide needs editing
+
+### Requirement: Pack file names
+The published pack SHALL be `dist/<pack>.mrpack` and its version file `dist/<pack>.env`, where `<pack>` is the pack's base name that `game-requirements` declares. Nothing else in this capability SHALL be named after the game.
+
+#### Scenario: Files carry the declared base name
+- **WHEN** the pack is exported
+- **THEN** it is written to `dist/<pack>.mrpack` and `dist/<pack>.env`, with `<pack>` equal to the base name `game-requirements` declares

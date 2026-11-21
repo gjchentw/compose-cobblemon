@@ -49,11 +49,15 @@ Unless the deployment overrides them, the server SHALL run with a 6 GB heap, at 
 - **THEN** the server runs with exactly these defaults
 
 ### Requirement: Client defaults
-The pack SHALL ship client options with render distance 10, simulation distance 6, entity distance 75 %, decreased particles, biome blend 2, fast clouds and a 120 FPS limit, starting with the data version line of the Minecraft version (`version:3955` for 1.21.1).
+The pack SHALL carry exactly one client settings file of its own, `options.txt`. It SHALL set render distance 10, simulation distance 6, entity distance 75 %, decreased particles, biome blend 2, fast clouds and a 120 FPS limit, and start with the data version line of the Minecraft version (`version:3955` for 1.21.1).
 
 #### Scenario: Fresh profile
 - **WHEN** a player installs the pack into a new profile and starts the game
 - **THEN** these options are in effect
+
+#### Scenario: Settings files the pack carries
+- **WHEN** the pack is inspected
+- **THEN** `options.txt` is the only client settings file accepted besides the server entry that export generates
 
 ### Requirement: Key bindings do not conflict
 Cobblemon's starter and summary screen SHALL stay on M, and Xaero's World Map SHALL open with V instead of its default M. The binding SHALL survive the first launch of a fresh profile.
@@ -71,7 +75,7 @@ Players SHALL be told, in the play guide, to give the game 4 GB of memory at min
 
 #### Scenario: Memory section
 - **WHEN** a player reads the play guide
-- **THEN** it states these limits and where to set them in Modrinth App and Prism Launcher
+- **THEN** it states these limits and where to set them in each launcher the pack install and update guide covers
 
 ### Requirement: First-minutes guidance
 Players SHALL be taught, in a play guide in English and a Traditional Chinese copy with the same sections, how to choose a starter, send out and recall Pokémon, battle, catch (finding recipes with EMI), heal, store Pokémon in a PC, ride, trade or battle other players and get unstuck, with a table of the keys involved. The play guide SHALL leave downloading, installing, joining and updating the pack to the pack install and update guide and link to it.
@@ -85,11 +89,11 @@ Players SHALL be taught, in a play guide in English and a Traditional Chinese co
 - **THEN** it sends them to the pack install and update guide and explains none of its steps itself
 
 ### Requirement: Gameplay acceptance checklist
-A gameplay checklist SHALL be completed by at least two players on staging, running the branch to be merged, before the merge, and again on production after the deployment: login, Pokémon spawn, starter selection, catch, battle, trade, ride, death and respawn, server restart, world persistence, and reaching the server from another network. The two runs SHALL use Modrinth App and Prism Launcher.
+The gameplay items of the player acceptance run that `compose-services` defines SHALL be: Pokémon spawn, starter selection, catch, battle, trade, ride, and death and respawn.
 
 #### Scenario: Release sign-off
-- **WHEN** a branch that changes the pack or the stack is ready to merge, which releases it
-- **THEN** all eleven items pass on staging before the merge and on production after the deployment, and the launcher used for each run is recorded
+- **WHEN** a branch that changes the pack or the stack is accepted, which releases it
+- **THEN** all seven gameplay items pass on staging before the merge and on production after the deployment
 
 ### Requirement: Game troubleshooting
 The play guide SHALL tell players what to do when the game crashes while loading, when the frame rate is low, and when Pokémon do not appear or battles do nothing.
@@ -101,3 +105,18 @@ The play guide SHALL tell players what to do when the game crashes while loading
 #### Scenario: Crash while loading
 - **WHEN** the game crashes while loading
 - **THEN** the play guide tells the player to set the maximum memory to the recommended value and to update the graphics driver
+
+### Requirement: Pack identity
+The pack SHALL be named `Cobblemon Pack`. Its published file SHALL have the base name `cobblemon`; `mrpack-distribution` and `compose-services` write that name as `<pack>` in `dist/<pack>.mrpack` and `dist/<pack>.env`. A server whose deployer supplies no display name SHALL be called `Cobblemon Server`.
+
+#### Scenario: Pack name
+- **WHEN** the pack is exported
+- **THEN** its index carries the name `Cobblemon Pack`
+
+#### Scenario: Published file names
+- **WHEN** the pack is published
+- **THEN** the files are `dist/cobblemon.mrpack` and `dist/cobblemon.env`
+
+#### Scenario: Default display name
+- **WHEN** no display name is supplied
+- **THEN** the MOTD starts with `Cobblemon Server`
