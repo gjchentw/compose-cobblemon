@@ -110,7 +110,7 @@ after the publish.
 5. `docker compose up -d && scripts/smoke.sh && scripts/restore-drill.sh`. The smoke check
    refuses a `PACK_VERSION` left in `.env` and a version file that does not match the pack.
 6. Tell players the new version (the MOTD shows it) and that the fixed link serves it; they
-   install it as a new profile (`docs/player-guide.md`). Run `docs/acceptance-checklist.md`
+   install it as a new profile (`docs/pack-install-guide.md`). Run `docs/acceptance-checklist.md`
    on production.
 
 Keep the noted commit and the pre-upgrade archive in `backups/keep/` until the new pack has

@@ -6,8 +6,10 @@ from a link that never changes and press Play. This repository is a GitHub templ
 your own copy, put your server's name and address in one file on `main`, and CI builds the
 pack for your server and commits it to `main`. No local tooling is needed to publish.
 
-- Players: read [docs/player-guide.md](docs/player-guide.md)
-  (Traditional Chinese: [docs/player-guide.zh-TW.md](docs/player-guide.zh-TW.md)).
+- Players: install the pack with [docs/pack-install-guide.md](docs/pack-install-guide.md),
+  then read [docs/play-guide.md](docs/play-guide.md) (Traditional Chinese:
+  [docs/pack-install-guide.zh-TW.md](docs/pack-install-guide.zh-TW.md),
+  [docs/play-guide.zh-TW.md](docs/play-guide.zh-TW.md)).
 - Admins: read [docs/admin-guide.md](docs/admin-guide.md), then
   [docs/upgrade.md](docs/upgrade.md) and [docs/rollback.md](docs/rollback.md).
 

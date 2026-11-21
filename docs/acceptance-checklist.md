@@ -15,7 +15,7 @@ with `SERVER_PUBLIC_HOST=<host>:25566 scripts/pack-export.sh` (the environment o
 
 | # | Item | How to test | Result (pass/fail) | Notes |
 |---|---|---|---|---|
-| 1 | Login | Install the pack as in `docs/player-guide.md`, join from the pre-filled server entry; the version in its name equals the version in the MOTD | | |
+| 1 | Login | Install the pack as in `docs/pack-install-guide.md`, join from the pre-filled server entry; the version in its name equals the version in the MOTD | | |
 | 2 | Pokémon spawn | Walk around spawn for two minutes; wild Pokémon appear in grass, water and caves | | |
 | 3 | Starter selection | A new player presses M, gets the starter screen (not the world map, which is on V) and receives the chosen Pokémon | | |
 | 4 | Catch | Craft or receive Poké Balls, weaken a wild Pokémon, catch it; it appears in the party | | |
