@@ -115,7 +115,7 @@ The ladder has five levels, four automated and one run by people. Each task in a
 
 | Level | Check | Typical means |
 |---|---|---|
-| L1 Static | Both compose file sets are valid; Dockerfile, YAML, shell, workflow and Python lint clean; `packwiz refresh` leaves `pack/` unchanged | `scripts/lint.sh`, `docker compose config -q` |
+| L1 Static | Both compose file sets are valid and fix no container, project or image name; Dockerfile, YAML, shell, workflow and Python lint clean; `packwiz refresh` leaves `pack/` unchanged | `scripts/lint.sh`, `docker compose config -q`, `scripts/config-check.sh` |
 | L2 Build | The tools image builds; the pack exports and passes inspection; git holds only the placeholder version | `scripts/pack-export.sh`, `scripts/pack-inspect.sh`, `scripts/version-check.sh` |
 | L3 Smoke | `.env` sets no `PACK_VERSION`, and the pack file and `dist/cobblemon.env` name the same version; the stack becomes healthy within the timeout; the server-side mod set is exact; the port answers; RCON is not published | `scripts/smoke.sh` |
 | L4 Persistence | The stack stops in order and restarts with the world intact; the newest backup restores | `scripts/persist-test.sh`, `scripts/restore-drill.sh` |

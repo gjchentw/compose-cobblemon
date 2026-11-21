@@ -17,7 +17,7 @@
 ## 3. Documents
 
 - [x] 3.1 Update the commands in `docs/admin-guide.md`, `docs/upgrade.md`, `docs/rollback.md` and `README.md`; add the one-time upgrade section (`--remove-orphans`, the old staging project) and a section on two deployments on one host (directory names, ports, `STAGING_PROJECT_NAME`, memory, no `COMPOSE_PROJECT_NAME`) (verify: L1)
-- [ ] 3.2 Add `scripts/config-check.sh` to the L1 means in `AGENTS.md` and `README.md`, and confirm with a search that no script, Compose file or document outside `tasks/` and archived changes still uses `cobblemon` as a service, container, project or image name (verify: L1)
+- [x] 3.2 Add `scripts/config-check.sh` to the L1 means in `AGENTS.md` and `README.md` (and to the same command line in `docs/upgrade.md`), and confirm with a search that no script, Compose file or document outside `tasks/` and archived changes still uses `cobblemon` as a service, container, project or image name (verify: L1)
 
 ## Workflow follow-up
 

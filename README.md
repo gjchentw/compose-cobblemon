@@ -97,7 +97,7 @@ Every change is checked bottom-up; CI runs L1 and L2 on every push.
 
 | Level | Command |
 |---|---|
-| L1 static | `scripts/lint.sh && docker compose config -q` |
+| L1 static | `scripts/lint.sh && docker compose config -q && scripts/config-check.sh` |
 | L2 pack | `scripts/pack-export.sh && scripts/pack-inspect.sh && scripts/version-check.sh` |
 | L3 smoke | `scripts/smoke.sh` |
 | L4 persistence | `scripts/persist-test.sh && scripts/restore-drill.sh` |
@@ -140,8 +140,9 @@ pack/                     packwiz source of truth (pack.toml, index.toml, mods/*
 tools/packwiz/Dockerfile  packwiz built from a pinned commit
 config/public.env         display name and public address; edit and commit to publish your pack
 config/server-icon.png    placeholder icon, replace with your own
-scripts/                  lint, pack-export, pack-inspect, pack-publish, version-check, smoke,
-                          persist-test, restore-drill, staging-clone-world, ci-env
+scripts/                  lint, config-check, pack-export, pack-inspect, pack-publish,
+                          version-check, smoke, persist-test, restore-drill,
+                          staging-clone-world, ci-env
 dist/                     cobblemon.mrpack and cobblemon.env, committed by CI only
 docs/                     guides, SOPs, checklist, adr/
 .github/workflows/ci.yml  L1 + L2 on push; publishes the pack on a push to main;

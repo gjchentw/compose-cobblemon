@@ -27,7 +27,7 @@ next to it, `../<your-repo>-accept`.
    - the backup image: same in `compose.yaml`
    - the server's display name or public address: edit `config/public.env`; both are built
      into the pack, so the change is published like any other
-2. `scripts/lint.sh && docker compose config -q && scripts/pack-export.sh && scripts/pack-inspect.sh`
+2. `scripts/lint.sh && docker compose config -q && scripts/config-check.sh && scripts/pack-export.sh && scripts/pack-inspect.sh`
 3. `scripts/pack-publish.sh --dry-run` tells whether merging would publish a new pack, and
    which archive members change.
 4. Exporting rewrites `dist/cobblemon.mrpack` and `dist/cobblemon.env` in your checkout. Put
