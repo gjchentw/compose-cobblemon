@@ -7,6 +7,9 @@
 #   - the services are minecraft and backup, plus packwiz under the tools profile;
 #   - the staging project name is STAGING_PROJECT_NAME and differs from
 #     production's.
+# It also asserts the mounts of the packwiz tools service: only pack/ writable,
+# scripts/ and dist/ read-only, so the tools container never sees .env, world
+# data, backups, staging copies or .git (mrpack-distribution spec).
 # Both file sets are rendered with the environment files Compose would read
 # (scripts/lib.sh), so a missing RCON_PASSWORD or PACK_VERSION fails here as it
 # does for `docker compose config`.
@@ -20,6 +23,8 @@ cd "$repo_root"
 . "$repo_root/scripts/lib.sh"
 
 expected_services="backup minecraft packwiz"
+# <source relative to the repository>:<rw|ro>, sorted; ./ is the repository root.
+expected_tool_mounts="dist:ro pack:rw scripts:ro"
 failures=0
 bad() { log "FAIL: $*"; failures=$((failures + 1)); }
 
@@ -50,6 +55,30 @@ offenders() {
 
 project_name() { sed -n 's/^name: //p' | head -n 1 | tr -d "\"'"; }
 
+# mounts_of SERVICE: the mounts of SERVICE in the rendered configuration on
+# stdin, as <source relative to the repository>:<rw|ro>, sorted, on one line.
+mounts_of() {
+  awk -v want="$1" -v root="$repo_root" '
+    function flush(rel) {
+      if (src == "") return
+      rel = src
+      if (rel == root) rel = "./"
+      else if (index(rel, root "/") == 1) rel = substr(rel, length(root) + 2)
+      print rel ":" mode
+      src = ""
+    }
+    /^[^ #]/ { flush(); in_services = ($0 == "services:"); next }
+    !in_services { next }
+    /^  [^ ]/ { flush(); svc = $1; sub(/:$/, "", svc); in_volumes = 0; next }
+    svc != want { next }
+    /^    [^ ]/ { flush(); in_volumes = ($1 == "volumes:"); next }
+    !in_volumes { next }
+    /^      - / { flush(); src = "?"; mode = "rw"; next }
+    /^        source: / { src = $2; next }
+    /^        read_only: true$/ { mode = "ro"; next }
+    END { flush() }' | sort | tr '\n' ' ' | sed 's/ $//'
+}
+
 prod="$(render production -f compose.yaml)"
 staging="$(render staging -f compose.yaml -f compose.staging.yaml)"
 
@@ -64,6 +93,9 @@ for label in production staging; do
     in_services && /^  [^ ]/ { s = $1; sub(/:$/, "", s); print s }' | sort | tr '\n' ' ' | sed 's/ $//')"
   [ "$services" = "$expected_services" ] \
     || bad "$label: services are '$services', expected '$expected_services'"
+  found="$(printf '%s\n' "$rendered" | mounts_of packwiz)"
+  [ "$found" = "$expected_tool_mounts" ] \
+    || bad "$label: the packwiz service mounts '$found', expected '$expected_tool_mounts' (only the pack writable)"
 done
 
 prod_name="$(printf '%s\n' "$prod" | project_name)"
@@ -81,5 +113,5 @@ probe="$(STAGING_PROJECT_NAME=config-check-probe render staging -f compose.yaml 
 [ "$staging_name" != "$prod_name" ] \
   || bad "staging and production share the project name '$prod_name': staging would take over production's containers"
 
-[ "$failures" -eq 0 ] || fail "$failures name check(s) failed"
-log "CONFIG OK: production is project '$prod_name', staging is '$staging_name'; services $expected_services; no fixed container or image name"
+[ "$failures" -eq 0 ] || fail "$failures configuration check(s) failed"
+log "CONFIG OK: production is project '$prod_name', staging is '$staging_name'; services $expected_services; no fixed container or image name; packwiz mounts $expected_tool_mounts"

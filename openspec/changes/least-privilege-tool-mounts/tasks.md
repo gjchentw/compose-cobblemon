@@ -2,7 +2,7 @@
 
 ## 1. Tools container
 
-- [ ] 1.1 Extend `scripts/config-check.sh` to require that the `packwiz` service in both rendered configurations bind-mounts exactly `pack/` writable and `scripts/` and `dist/` read-only; show it fails on the current `compose.yaml` and names the repository-root mount (verify: L1)
+- [x] 1.1 Extend `scripts/config-check.sh` to require that the `packwiz` service in both rendered configurations bind-mounts exactly `pack/` writable and `scripts/` and `dist/` read-only; show it fails on the current `compose.yaml` and names the repository-root mount (verify: L1)
 - [ ] 1.2 Mount the three directories in `compose.yaml` instead of the repository, and give each run its own working directory under `.build/`: the export's build directory, the copy of the committed pack in the publish comparison, and a copy of a pack inspected from outside `dist/`; update the tools service's comment and the usage comment of `scripts/pack-inspect.sh`. Show that `scripts/config-check.sh` passes; that the `minecraft` and `backup` services render identically before and after for both file sets; that L2 passes; that the publish dry run with a non-placeholder address rebuilds and compares; and, with a probe, that during each run the container sees no `.env`, `data/`, `backups/`, `staging/`, `.git/` or `config/`, can write `pack/` and its run directory (files owned by the host user), and cannot write `scripts/` or `dist/` (verify: L1, L2)
 
 ## 2. Linters
