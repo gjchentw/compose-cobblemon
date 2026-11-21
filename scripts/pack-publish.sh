@@ -2,17 +2,20 @@
 # Publish the pack on main (L2). Rebuild the pack with the version of the
 # committed dist/cobblemon.mrpack and compare the archive members byte for
 # byte: equal members mean the pack did not change (a documentation-only
-# commit, for example) and nothing is published. Otherwise build the pack with
-# the version of the checked-out commit, inspect it, and commit
+# commit, for example) and nothing is published, unless the display name in the
+# committed version file differs from the configured one. Otherwise build the
+# pack with the version of the checked-out commit, inspect it, and commit
 # dist/cobblemon.mrpack and dist/cobblemon.env, and nothing else, as
 # github-actions[bot] with the message "pack <version> [skip ci]". Pushing the
 # commit is left to the workflow.
+# While the public address in config/public.env is empty or the placeholder,
+# nothing is built or published and the script succeeds: the template itself
+# stays green, and a published pack never carries the placeholder.
 #
 # Usage: scripts/pack-publish.sh [--dry-run]
 #   --dry-run  build, compare and report what would be committed; commit
 #              nothing. Runs anywhere; CI runs it on every push.
-#   Without --dry-run the script runs only in CI (CI=true) and refuses the
-#   placeholder public address (PACK_REQUIRE_REAL_HOST).
+#   Without --dry-run the script runs only in CI (CI=true).
 # Either way dist/ is left holding the last pack it built.
 set -euo pipefail
 
@@ -34,6 +37,18 @@ fi
 
 pack="dist/cobblemon.mrpack"
 version_file="dist/cobblemon.env"
+
+host="$(public_value SERVER_PUBLIC_HOST)"
+name="$(public_value SERVER_NAME)"
+name="${name:-Cobblemon Server}"
+if [ -z "$host" ] || [ "$host" = "mc.example.com" ]; then
+  if [ -n "$dry_run" ]; then
+    log "PUBLISH (dry run): would skip; SERVER_PUBLIC_HOST in $PUBLIC_INFO_FILE is empty or the placeholder"
+  else
+    log "PUBLISH: skipped; set SERVER_PUBLIC_HOST in $PUBLIC_INFO_FILE to publish a pack"
+  fi
+  exit 0
+fi
 
 # compare A B: prints the archive members that differ (missing on one side or
 # with other bytes) and returns 1 when there are any. Read in the tools image,
@@ -64,11 +79,21 @@ if git cat-file -e "HEAD:$pack" 2>/dev/null && git cat-file -e "HEAD:$version_fi
   git show "HEAD:$pack" > "$committed"
   log "== rebuilding the committed pack $old_version from the checked-out sources"
   scripts/pack-export.sh "$old_version"
+  # One pair of surrounding quotes removed, as Compose reads the file.
+  old_name="$(git show "HEAD:$version_file" | sed -n "s/^SERVER_NAME=//p" | sed -e "s/^'\(.*\)'\$/\1/" -e 's/^"\(.*\)"$/\1/')"
   if differ="$(compare "$committed" "$pack")"; then
-    log "PUBLISH: unchanged; $pack stays at $old_version"
-    exit 0
+    if [ "$old_name" = "$name" ]; then
+      log "PUBLISH: unchanged; $pack stays at $old_version"
+      exit 0
+    fi
+    if [ -n "$old_name" ]; then
+      log "== the committed $version_file names the server '$old_name', not '$name'"
+    else
+      log "== the committed $version_file has no display name; the pack is built as '$name'"
+    fi
+  else
+    log "== the pack differs from the committed $old_version in: $differ"
   fi
-  log "== the pack differs from the committed $old_version in: $differ"
 else
   log "== no pack is committed at HEAD"
 fi

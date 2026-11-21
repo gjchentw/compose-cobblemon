@@ -12,7 +12,7 @@
 
 ## 3. Publish
 
-- [ ] 3.1 `scripts/pack-publish.sh` skips with a message and exit 0 on an empty or placeholder address, in publish mode and as "would skip" in the dry run, and treats a differing or missing display name in the committed version file as a change. Simulate against a local bare remote: placeholder skips and pushes nothing; a real address publishes; an equal pack with a version file lacking the name publishes; a documentation-only push after that publishes nothing (verify: L1, L2)
+- [x] 3.1 `scripts/pack-publish.sh` skips with a message and exit 0 on an empty or placeholder address, in publish mode and as "would skip" in the dry run, and treats a differing or missing display name in the committed version file as a change. Simulate against a local bare remote: placeholder skips and pushes nothing; a real address publishes; an equal pack with a version file lacking the name publishes; a documentation-only push after that publishes nothing (verify: L1, L2)
 - [ ] 3.2 Update the workflow's comments and the publish step's name for the skip; push the branch and a `smoke/*` branch and confirm lint, validate, pack with its dry-run report, and the hosted smoke, persistence and restore jobs pass (verify: L1, L2, L3, L4)
 
 ## 4. Documents and rules
