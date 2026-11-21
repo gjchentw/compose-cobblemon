@@ -77,15 +77,19 @@ rm -f "$build_dir/pack/pack.toml.bak"
 grep -q "^version = \"$version\"$" "$build_dir/pack/pack.toml" \
   || fail "could not set version $version in the build copy of pack.toml"
 
+# The tools container sees only pack/, scripts/ and dist/ (compose.yaml); this
+# run's build directory is added at /build. Physical path: Docker Desktop
+# cannot mount through macOS symlinks.
+build_abs="$(cd "$build_dir" && pwd -P)"
 run() {
-  docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir/pack" packwiz "$@"
+  docker compose --progress quiet --profile tools run --rm -T -v "$build_abs:/build" -w /build/pack packwiz "$@"
 }
 # The pre-filled entry carries the version, so players can compare it with the
 # version in the server's MOTD (public-server-info).
-docker compose --progress quiet --profile tools run --rm -T -w "/work/$build_dir/pack" --entrypoint python3 \
+docker compose --progress quiet --profile tools run --rm -T -v "$build_abs:/build" -w /build/pack --entrypoint python3 \
   packwiz /work/scripts/make-servers-dat.py --name "$name ($version)" --host "$host" --out servers.dat
 run refresh
-run modrinth export -o "/work/$build_dir/cobblemon.mrpack"
+run modrinth export -o /build/cobblemon.mrpack
 printf "PACK_VERSION=%s\nSERVER_NAME='%s'\n" "$version" "$name" > "$build_dir/cobblemon.env"
 # Both files are moved into dist/ only after the export succeeded, so a failed
 # export leaves the previous pair in dist/ as it was.

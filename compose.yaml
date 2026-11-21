@@ -93,8 +93,13 @@ services:
       context: tools/packwiz
     # No image: tag, so Compose tags the build per project and two repositories
     # on one host do not overwrite each other's tools image.
-    # Run as the host user so files written to the bind mount are not root-owned.
+    # Run as the host user so files written to pack/ are not root-owned.
     user: "${UID:-1000}:${GID:-1000}"
     working_dir: /work/pack
+    # Only what pack tooling needs; never .env, world data, backups, staging
+    # copies or .git. A script that needs a working directory adds it to its
+    # own run with `docker compose run -v` (scripts/pack-export.sh).
     volumes:
-      - ./:/work
+      - ./pack:/work/pack
+      - ./scripts:/work/scripts:ro
+      - ./dist:/work/dist:ro

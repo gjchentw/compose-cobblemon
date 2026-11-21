@@ -52,10 +52,13 @@ fi
 
 # compare A B: prints the archive members that differ (missing on one side or
 # with other bytes) and returns 1 when there are any. Read in the tools image,
-# so the host needs no Python.
+# so the host needs no Python. A is the only file in a directory of its own,
+# which is mounted read-only for this run; B is under dist/, which the tools
+# container sees.
 compare() {
-  docker compose --progress quiet --profile tools run --rm -T -w /work --entrypoint python3 \
-    packwiz - "$1" "$2" <<'PY'
+  docker compose --progress quiet --profile tools run --rm -T \
+    -v "$(cd "$(dirname "$1")" && pwd -P):/committed:ro" -w /work --entrypoint python3 \
+    packwiz - "/committed/$(basename "$1")" "$2" <<'PY'
 import sys
 import zipfile
 
@@ -74,8 +77,9 @@ if git cat-file -e "HEAD:$pack" 2>/dev/null && git cat-file -e "HEAD:$version_fi
   is_pack_version "$old_version" \
     || fail "the committed $version_file does not name a pack version: ${old_version:-nothing}"
   mkdir -p .build
-  committed="$(mktemp .build/committed.XXXXXX)"
-  trap 'rm -f "$committed"' EXIT
+  committed_dir="$(mktemp -d .build/committed.XXXXXX)"
+  trap 'rm -rf "$committed_dir"' EXIT
+  committed="$committed_dir/$(basename "$pack")"
   git show "HEAD:$pack" > "$committed"
   log "== rebuilding the committed pack $old_version from the checked-out sources"
   scripts/pack-export.sh "$old_version"
