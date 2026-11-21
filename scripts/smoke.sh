@@ -9,8 +9,10 @@
 #
 # Usage: scripts/smoke.sh
 # Env:   SMOKE_TIMEOUT  seconds to wait for healthy (default 600)
-#        COMPOSE_FILE / COMPOSE_PROJECT_NAME  honoured by docker compose, so the
-#        same script serves staging (see compose.staging.yaml).
+#        COMPOSE_FILE  honoured by docker compose, so the same script serves
+#        staging (see compose.staging.yaml). The staging project name comes
+#        from STAGING_PROJECT_NAME in .env; a staging run that would share
+#        production's project name is refused (see below).
 #        COMPOSE_ENV_FILES  defaults to .env,dist/cobblemon.env (scripts/lib.sh).
 set -euo pipefail
 
@@ -21,6 +23,19 @@ cd "$repo_root"
 
 timeout="${SMOKE_TIMEOUT:-600}"
 service="minecraft"
+
+# Another file set than production's (staging) must not run under production's
+# project name: Compose would treat production's containers as its own and
+# recreate them with the staging settings. It happens when COMPOSE_PROJECT_NAME
+# is set for the whole shell or in .env, because it replaces the name in
+# compose.staging.yaml. Refuse before anything is created.
+if [ -n "${COMPOSE_FILE:-}" ] && [ "$COMPOSE_FILE" != "compose.yaml" ]; then
+  this_project="$(docker compose config 2>/dev/null | sed -n 's/^name: //p' | head -n 1)"
+  prod_project="$(COMPOSE_FILE=compose.yaml docker compose config 2>/dev/null | sed -n 's/^name: //p' | head -n 1)"
+  if [ -n "$this_project" ] && [ "$this_project" = "$prod_project" ]; then
+    fail "COMPOSE_FILE=$COMPOSE_FILE would run under production's project name '$prod_project' and take over its containers; unset COMPOSE_PROJECT_NAME (shell and .env) and set STAGING_PROJECT_NAME in .env instead"
+  fi
+fi
 
 [ -n "$(env_value RCON_PASSWORD)" ] || fail "RCON_PASSWORD is empty; set a real one in .env"
 
