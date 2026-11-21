@@ -10,7 +10,7 @@
 ## 2. On real stacks
 
 - [x] 2.1 Move this host's deployment as an existing one would: stop, switch to the branch, `docker compose up -d --remove-orphans`; show the old `cobblemon` container is gone, the containers carry Compose's names, and smoke, persistence and restore pass (verify: L3, L4)
-- [ ] 2.2 Two copies in differently named directories with different ports and staging project names: create their four stacks without starting them and show eight containers under four projects with no shared name; show the files before this change fail the same test (verify: L1)
+- [x] 2.2 Two copies in differently named directories with different ports and staging project names: create their four stacks without starting them and show eight containers under four projects with no shared name; show the files before this change fail the same test (verify: L1)
 - [ ] 2.3 Rehearse branch acceptance on staging from a worktree with the new names: staging passes smoke, persistence and restore under its own project, and production restarts and passes smoke afterwards (verify: L3, L4)
 - [ ] 2.4 Push the branch and a `smoke/*` branch and confirm lint, validate with the new check, pack, and the hosted smoke, persistence and restore jobs pass (verify: L1, L2, L3, L4)
 
