@@ -3,7 +3,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Export builds a versioned pack from a copy
-Export SHALL build `dist/cobblemon.mrpack` from a copy of `pack/` with the version substituted, without modifying `pack/`, and SHALL write `dist/cobblemon.env` holding `PACK_VERSION=<version>` for the same version and `SERVER_NAME` with the display name the pack was built with, and nothing else. Without a version argument it SHALL use the version derived from the checked-out commit. It SHALL reject a version in another format, and an explicitly empty one. It SHALL reject a display name that cannot be written to the version file unchanged.
+Export SHALL build `dist/cobblemon.mrpack` from a copy of `pack/` with the version substituted, without modifying `pack/`, and SHALL write `dist/cobblemon.env` holding only `PACK_VERSION=<version>` and `SERVER_NAME`, the display name the pack was built with. Without a version argument it SHALL use the checked-out commit's version. It SHALL reject a version in another format, an explicitly empty one, and a display name that cannot be written to the version file unchanged.
 
 #### Scenario: Release version build
 - **WHEN** `scripts/pack-export.sh 2026.11.17-dbb7da6` runs with the display name `My Cobblemon World`
