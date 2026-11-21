@@ -45,7 +45,7 @@ Verified with Compose 5.7.1 on 2026-11-21:
 
 ## Risks / Trade-offs
 
-- [Administrators' habits and saved commands use `cobblemon`] → Compose answers "no such service: cobblemon"; the upgrade section lists the rename.
+- [Administrators' habits and saved commands use `cobblemon`] → Compose answers `service "cobblemon" is not running` (observed in task 2.1); the upgrade section lists the rename.
 - [An administrator upgrades without `--remove-orphans` while the old container runs] → The new container fails to start with a port error and the old one keeps serving; the smoke check fails. The upgrade section names the command, and stopping first, as the SOP says, avoids the port conflict.
 - [Two copies keep the default staging project name] → The second staging adopts the first one's containers. `.env.example` and the administrator guide say the value must be unique on the host; the smoke guard does not see another repository.
 - [Two checkouts with the same directory name on one host] → They are one Compose project. The administrator guide says to use different directory names.
