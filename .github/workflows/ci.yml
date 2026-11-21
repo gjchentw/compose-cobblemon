@@ -49,6 +49,8 @@ jobs:
       - run: scripts/ci-env.sh
       - run: docker compose config -q
       - run: docker compose -f compose.yaml -f compose.staging.yaml config -q
+      - name: Names in the rendered configurations (no fixed container, project or image name)
+        run: scripts/config-check.sh
 
   pack:
     name: L2 export and inspect
